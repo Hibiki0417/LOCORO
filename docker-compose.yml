@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    container_name: locoro_web
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=locoro_app.settings 
+      
+    command: python3 manage.py runserver 0.0.0.0:8000
