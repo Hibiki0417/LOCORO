@@ -1,3 +1,7 @@
 from django.shortcuts import render
+from django.views.generic import ListView
+from .models import Room
 
-# Create your views here.
+class RoomListView(ListView):
+    model = Room
+    template_name = 'room_list.html'
