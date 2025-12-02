@@ -1,0 +1,40 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">部屋一覧</h1>
+
+<div class="row">
+    {% for room in object_list %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+
+                <!-- 仮のサムネ（後で写真に差し替え可能） -->
+                <img src="https://placehold.jp/300x200.png"
+                     class="card-img-top"
+                     alt="room image">
+
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ room.hotel.name }} - {{ room.room_number }}
+                    </h5>
+
+                    <p class="card-text">
+                        状態: <span class="badge bg-primary">{{ room.get_status_display }}</span><br>
+                        定員: {{ room.capacity }}名<br>
+                        価格: {{ room.base_price }}円
+                    </p>
+
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        詳細を見る
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    {% empty %}
+        <p>部屋が登録されていません。</p>
+    {% endfor %}
+</div>
+
+{% endblock %}
