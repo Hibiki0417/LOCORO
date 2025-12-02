@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- 戻るリンク -->
+  <div class="mb-3">
+    <a href="{% url 'room_list' %}" class="btn btn-outline-secondary btn-sm">
+      ← 部屋一覧に戻る
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- 左：部屋情報カード -->
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0">{{ room.name }}</h5>
+            <div class="text-muted small">
+              {{ room.hotel.name }} / {{ room.floor }}階
+            </div>
+          </div>
+
+          
+          <!-- ステータスバッジ -->
+            <div class="mb-2">
+                {% if room.status == "available" %}
+                    <span class="badge bg-success">空室（予約可）</span>
+                {% elif room.status == "occupied" %}
+                    <span class="badge bg-danger">利用中</span>
+                {% elif room.status == "cleaning" %}
+                    <span class="badge bg-warning text-dark">清掃中</span>
+                {% elif room.status == "reserved" %}
+                    <span class="badge bg-primary">予約中</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ room.get_status_display }}</span>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="card-body">
+          <!-- 基本情報 -->
+          <h6 class="text-muted mb-2">基本情報</h6>
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>フロア</span>
+              <span>{{ room.floor }} 階</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>定員</span>
+              <span>{{ room.capacity }} 名まで</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>喫煙</span>
+              <span>
+                {% if room.is_smoking %}
+                  喫煙可
+                {% else %}
+                  禁煙
+                {% endif %}
+              </span>
+            </li>
+          </ul>
+
+          <!-- 料金エリア -->
+          <h6 class="text-muted mb-2">料金</h6>
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="small text-muted">平日</div>
+                <div class="fw-bold">
+                  ￥{{ room.weekday_price|default:room.base_price|floatformat:0 }}
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="small text-muted">週末</div>
+                <div class="fw-bold">
+                  ￥{{ room.weekend_price|default:room.base_price|floatformat:0 }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 説明（あれば） -->
+          {% if room.description %}
+          <hr>
+          <h6 class="text-muted mb-2">説明</h6>
+          <p class="mb-0">{{ room.description }}</p>
+          {% endif %}
+        </div>
+
+        <!-- 予約ボタン（中身はこれから実装でOK） -->
+        <div class="card-footer d-flex justify-content-end gap-2">
+          <button class="btn btn-outline-secondary btn-sm" disabled>
+            残り時間：準備中…
+          </button>
+          <a href="#" class="btn btn-primary">
+            この部屋を予約する（準備中）
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：ホテル情報サイドカード -->
+    <div class="col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h6 class="mb-0">ホテル情報</h6>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title mb-1">{{ room.hotel.name }}</h5>
+          {% if room.hotel.address %}
+            <p class="card-text mb-1">
+              <span class="text-muted small">住所</span><br>
+              {{ room.hotel.address }}
+            </p>
+          {% endif %}
+
+          {% if room.hotel.phone %}
+            <p class="card-text mb-1">
+              <span class="text-muted small">電話番号</span><br>
+              {{ room.hotel.phone }}
+            </p>
+          {% endif %}
+
+          {% if room.hotel.description %}
+            <p class="card-text mt-2">
+              {{ room.hotel.description }}
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

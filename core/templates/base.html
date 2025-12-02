@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LOCORO{% endblock %}</title>
+    <title>
+        {% block title %}LOCORO{% endblock %}</title>
 
     <!-- Bootstrap -->
     <link
@@ -16,7 +17,7 @@
     <!-- Navbar（必要なら後で変更できる）-->
     <nav class="navbar navbar-dark bg-dark mb-4">
       <div class="container">
-        <a class="navbar-brand" href="/">LOCORO</a>
+        <a class="navbar-brand" href="{% url 'room_list' %}">LOCORO</a> <!--ここ修正する-->
       </div>
     </nav>
 
