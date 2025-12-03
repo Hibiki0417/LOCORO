@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 class Hotel(models.Model):
     """ホテル1軒分を表すモデル"""
 
@@ -79,3 +77,43 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"{self.room} - {self.status}"
+
+
+class ReservationTicket(models.Model):
+    class Status(models.TextChoices):
+        HOLD = "HOLD", "1時間予約中"          # チケット有効中（空室待ち）
+        KEEPING = "KEEPING", "30分キープ中"  # 清掃完了後、部屋を取り置き中
+        EXPIRED = "EXPIRED", "期限切れ"      # 使われなかった or 時間切れ
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name="reservations",
+        verbose_name="部屋",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.HOLD,
+        verbose_name="予約ステータス",
+    )
+    # チケットを取った時間（いつ1時間カウントが始まったか）
+    hold_started_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="予約開始時刻",
+    )
+    # 「この時間までに空室にならなかったら無効」みたいな上限
+    hold_expires_at = models.DateTimeField(
+        verbose_name="1時間チケットの有効期限",
+        null=True,
+        blank=True,
+    )
+    # 清掃完了後の「30分キープ」が切れる時刻
+    keep_expires_at = models.DateTimeField(
+        verbose_name="30分キープの有効期限",
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"{self.room} - {self.get_status_display()}"
