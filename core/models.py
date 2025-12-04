@@ -11,6 +11,10 @@ class Hotel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = "ホテル"
+        verbose_name_plural = "ホテル一覧"
+
     def __str__(self) -> str:
         return self.name
     
@@ -50,11 +54,19 @@ class Room(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("hotel", "room_number")     # 同じホテル内で重複禁止
+        verbose_name = "部屋"
+        verbose_name_plural = "部屋一覧"
+        unique_together = ("hotel", "room_number")
         ordering = ["hotel", "room_number"]
+
 
     def __str__(self) -> str:
         return f"{self.hotel.name} - {self.room_number}"
+    
+    def set_status(self, new_status: str):
+        """部屋の状態を共通で更新するメソッド"""
+        self.status = new_status
+        self.save()
 
 class ReservationStatus(models.TextChoices):
     RESERVED = "reserved", "予約済み（清掃待ち）"
@@ -66,17 +78,73 @@ class ReservationStatus(models.TextChoices):
 class Reservation(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
+
     status = models.CharField(
         max_length=20,
         choices=ReservationStatus.choices,
         default=ReservationStatus.RESERVED,
     )
+
+    # 予約作成時刻
     reserved_at = models.DateTimeField(auto_now_add=True)
-    hold_expires_at = models.DateTimeField(null=True, blank=True)
+
+    # 清掃完了 → キープ開始時刻
+    hold_started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="キープ開始時刻（清掃完了時）",
+    )
+
+    # キープ終了（30分後）の時刻
+    hold_expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="キープ終了時刻",
+    )
+
+    # 延長チケットなどで延びた終了時刻（オプション）
+    keep_expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="延長後の終了時刻",
+    )
+
     extended_minutes = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "予約"
+        verbose_name_plural = "予約一覧"
 
     def __str__(self):
         return f"{self.room} - {self.status}"
+
+    # ------------------------------
+    # 現在キープ中かどうか判定
+    # ------------------------------
+    def is_holding(self):
+        """キープ状態で、現在時刻がキープ終了前なら True"""
+        from django.utils import timezone
+
+        if self.status != ReservationStatus.HOLDING:
+            return False
+
+        if self.hold_expires_at and timezone.now() <= self.hold_expires_at:
+            return True
+
+        return False
+
+    # ------------------------------
+    # キープ期限切れか判定
+    # ------------------------------
+    def is_hold_expired(self):
+        """キープ期限が過ぎているなら True"""
+        from django.utils import timezone
+
+        if self.hold_expires_at and timezone.now() > self.hold_expires_at:
+            return True
+
+        return False
+
 
 
 class ReservationTicket(models.Model):
@@ -114,6 +182,10 @@ class ReservationTicket(models.Model):
         null=True,
         blank=True,
     )
+
+    class Meta:
+        verbose_name = "予約チケット"
+        verbose_name_plural = "予約チケット一覧"
 
     def __str__(self):
         return f"{self.room} - {self.get_status_display()}"

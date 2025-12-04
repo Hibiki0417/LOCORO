@@ -40,6 +40,20 @@
 
         </div>
 
+                <!-- 清掃完了 → キープ開始ボタン -->
+          {% if room.status == "cleaning" %}
+          <div class="mb-3">
+              <form method="post" action="{% url 'complete_cleaning' room.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-warning w-100">
+                      清掃完了 → 30分キープ開始
+                  </button>
+              </form>
+          </div>
+          {% endif %}
+
+     
+
         <div class="card-body">
           <!-- 基本情報 -->
           <h6 class="text-muted mb-2">基本情報</h6>
