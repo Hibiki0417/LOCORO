@@ -7,6 +7,13 @@ class Hotel(models.Model):
     address = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
 
+    image = models.ImageField(
+        upload_to="hotel_images/",
+        blank=True,
+        null=True,
+        verbose_name="ホテル画像"
+    )
+
     is_active = models.BooleanField(default=True)       # 予約受付中かどうか
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

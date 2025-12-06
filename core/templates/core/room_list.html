@@ -8,16 +8,17 @@
     {% for room in object_list %}
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm">
+                    {% if room.hotel.image %}
+                        <img src="{{ room.hotel.image.url }}" class="card-img-top" alt="{{ room.hotel.name }}">
+                    {% else %}
+                        <img src="https://placehold.jp/300x200.png" class="card-img-top" alt="no image">
+                    {% endif %}
 
-                <!-- 仮のサムネ（後で写真に差し替え可能） -->
-                <img src="https://placehold.jp/300x200.png"
-                     class="card-img-top"
-                     alt="room image">
 
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{ room.hotel.name }} - {{ room.room_number }}
-                    </h5>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ room.hotel.name }} - {{ room.room_number }}
+                        </h5>
 
                     <p class="card-text">
                         状態：
