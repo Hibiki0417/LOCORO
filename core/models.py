@@ -7,6 +7,13 @@ class Hotel(models.Model):
     address = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
 
+    image = models.ImageField(
+        upload_to="hotel_images/",
+        blank=True,
+        null=True,
+        verbose_name="ホテル画像"
+    )
+
     is_active = models.BooleanField(default=True)       # 予約受付中かどうか
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -101,11 +108,12 @@ class RoomImage(models.Model):
 
 
 class ReservationStatus(models.TextChoices):
-    RESERVED = "reserved", "予約済み（清掃待ち）"
+    RESERVED = "reserved", "予約待ち"
     HOLDING = "holding", "キープ中"
     CHECKED_IN = "checked_in", "利用中"
     COMPLETED = "completed", "利用完了"
     CANCELLED = "cancelled", "キャンセル"
+
 
 class Reservation(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
@@ -117,24 +125,20 @@ class Reservation(models.Model):
         default=ReservationStatus.RESERVED,
     )
 
-    # 予約作成時刻
     reserved_at = models.DateTimeField(auto_now_add=True)
 
-    # 清掃完了 → キープ開始時刻
     hold_started_at = models.DateTimeField(
         null=True,
         blank=True,
         help_text="キープ開始時刻（清掃完了時）",
     )
 
-    # キープ終了（30分後）の時刻
     hold_expires_at = models.DateTimeField(
         null=True,
         blank=True,
         help_text="キープ終了時刻",
     )
 
-    # 延長チケットなどで延びた終了時刻（オプション）
     keep_expires_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -149,6 +153,7 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"{self.room} - {self.status}"
+
 
     # ------------------------------
     # 現在キープ中かどうか判定

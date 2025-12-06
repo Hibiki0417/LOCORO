@@ -5,7 +5,7 @@
 <div class="container py-4">
   <!-- 戻るリンク -->
   <div class="mb-3">
-    <a href="{% url 'room_list' %}" class="btn btn-outline-secondary btn-sm">
+    <a href="{% url 'core:room_list' %}" class="btn btn-outline-secondary btn-sm">
       ← 部屋一覧に戻る
     </a>
   </div>
@@ -43,7 +43,7 @@
                 <!-- 清掃完了 → キープ開始ボタン -->
           {% if room.status == "cleaning" %}
           <div class="mb-3">
-              <form method="post" action="{% url 'complete_cleaning' room.pk %}">
+              <form method="post" action="{% url 'core:start_hold' room.pk %}">
                   {% csrf_token %}
                   <button class="btn btn-warning w-100">
                       清掃完了 → 30分キープ開始
