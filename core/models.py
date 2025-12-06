@@ -68,6 +68,38 @@ class Room(models.Model):
         self.status = new_status
         self.save()
 
+class RoomImage(models.Model):
+    """部屋ごとの画像（最大20枚想定）"""
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name="images",  # room.images でアクセスできるように
+        verbose_name="部屋",
+    )
+    image = models.ImageField(
+        upload_to="room_images/",
+        verbose_name="画像",
+    )
+    is_main = models.BooleanField(
+        default=False,
+        verbose_name="メイン画像かどうか",
+        help_text="一覧などで優先的に表示したい画像ならチェック",
+    )
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="アップロード日時",
+    )
+
+    class Meta:
+        verbose_name = "部屋画像"
+        verbose_name_plural = "部屋画像"
+        ordering = ["-is_main", "id"]  # メイン画像が先頭に来る
+
+    def __str__(self) -> str:
+        return f"{self.room} - image #{self.pk}"
+
+
 class ReservationStatus(models.TextChoices):
     RESERVED = "reserved", "予約済み（清掃待ち）"
     HOLDING = "holding", "キープ中"

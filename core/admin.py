@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Hotel, Room, Reservation, ReservationTicket
+from .models import Hotel, Room, Reservation, ReservationTicket, RoomImage
 
 # Hotel 管理
 @admin.register(Hotel)
@@ -8,10 +8,19 @@ class HotelAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
 
 # Room 管理
+# RoomImage を Room にインラインで表示
+class RoomImageInline(admin.TabularInline):
+    model = RoomImage
+    extra = 1           # 新規行を1つ表示
+    max_num = 20        # 画像は最大20枚まで
+    
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ("hotel", "room_number", "status", "is_available")
     list_filter = ("status", "hotel")
+    inlines = [RoomImageInline] 
+
+
 
 # Reservation 管理（予約）
 @admin.register(Reservation)
