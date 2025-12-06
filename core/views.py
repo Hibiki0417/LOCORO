@@ -12,11 +12,21 @@ class RoomListView(ListView):
     template_name = 'core/room_list.html'
     context_object_name = 'rooms'
 
+    def get(self, request, *args, **kwargs):
+        # 画面を開くたびに、期限切れのキープを掃除
+        cleanup_expired_holds()
+        return super().get(request, *args, **kwargs)
+
 
 class RoomDetailView(DetailView):
     model = Room
     template_name = 'core/room_detail.html'
     context_object_name = 'room'
+
+    def get(self, request, *args, **kwargs):
+        # 詳細画面を開くたびにも掃除しておく
+        cleanup_expired_holds()
+        return super().get(request, *args, **kwargs)
 
 @require_POST
 def complete_cleaning(request, pk):
@@ -61,39 +71,86 @@ def start_hold(request, pk):
     清掃完了 → この部屋を30分キープ開始するビュー
 
     - Reservation（予約）を1件作成
-      - status（予約状態） = HOLDING（キープ中）
-      - hold_started_at（キープ開始時刻） = 今
-      - hold_expires_at（キープ終了時刻） = 30分後
-    - Room.status（部屋状態） = holding（キープ中） に更新
+        - status（予約状態）  → HOLDING（キープ中）
+        - hold_started_at（キー予約開始刻）→ 今
+        - hold_expires_at（キー終了刻）    → 30分後
+    - Room.status（部屋の状態）を holding（キープ中）に更新
     """
 
     # 対象の部屋を取得
     room = get_object_or_404(Room, pk=pk)
 
-    # すでにキープ中の予約があるなら、二重作成を防ぐガード
-    existing = Reservation.objects.filter(
-        room=room,
-        status=ReservationStatus.HOLDING,   # status（予約状態）がキープ中
-    ).first()
-    if existing:
-        # もうキープ中なら何もせず詳細ページへ戻る
-        return redirect("core:room_detail", pk=room.pk)
+    # 現在時刻
+    now = timezone.now()
 
-    now = timezone.now()                               # now（現在時刻）
-    keep_minutes = 30                                  # keep_minutes（キープ時間：30分）
-    expires_at = now + datetime.timedelta(minutes=keep_minutes)
-
-    # Reservation（予約）を作成
-    reservation = Reservation.objects.create(
-        hotel=room.hotel,                              # hotel（どのホテルか）
-        room=room,                                     # room（どの部屋か）
-        status=ReservationStatus.HOLDING,              # status（予約状態：キープ中）
-        hold_started_at=now,                           # hold_started_at（キープ開始）
-        hold_expires_at=expires_at,                    # hold_expires_at（キープ終了）
+    # すでに「有効なキープ中」の予約があるか確認（ダブり防止）
+    existing = (
+        Reservation.objects
+        .filter(
+            room=room,
+            status=ReservationStatus.HOLDING,   # キープ中
+            hold_expires_at__gt=now,            # まだ期限前のものだけ
+        )
+        .first()
     )
 
-    # Room（部屋）の状態を holding（キープ中）に変更
-    room.status = RoomStatus.HOLDING                  # room.status（部屋状態：キープ中）
+    if existing:
+        # すでにキープ中なら何もせず詳細ページへ戻る
+        return redirect("core:room_detail", pk=room.pk)
+
+    # ここから新しい Reservation を作成
+    keep_minutes = 30
+    expires_at = now + timezone.timedelta(minutes=keep_minutes)
+
+    reservation = Reservation.objects.create(
+        hotel=room.hotel,
+        room=room,
+        status=ReservationStatus.HOLDING,
+        hold_started_at=now,
+        hold_expires_at=expires_at,
+    )
+
+    # Room（部屋）の状態も holding（キープ中）に変更
+    room.status = ReservationStatus.HOLDING
     room.save(update_fields=["status", "updated_at"])
 
     return redirect("core:room_detail", pk=room.pk)
+
+
+def cleanup_expired_holds():
+    """
+    期限切れのキープ(HOLDING)を掃除する（画面を開いたときに実行）
+
+    - hold_expires_at <= 現在 の Reservation(HOLDING) を CANCELLED にする
+    - 対象の Room に「まだ有効なキープ」がなければ、Room.status を AVAILABLE に戻す
+    """
+    now = timezone.now()
+
+    # 期限切れになっている「キープ中」の予約を全部取得
+    expired_qs = (
+        Reservation.objects
+        .select_related("room")
+        .filter(
+            status=ReservationStatus.HOLDING,
+            hold_expires_at__lte=now,
+        )
+    )
+
+    for reservation in expired_qs:
+        room = reservation.room
+
+        # この予約を「期限切れ扱い」に変更
+        reservation.status = ReservationStatus.CANCELLED
+        reservation.save(update_fields=["status"])
+
+        # この部屋に、まだ有効なキープが他に残っているか？
+        has_active_hold = Reservation.objects.filter(
+            room=room,
+            status=ReservationStatus.HOLDING,
+            hold_expires_at__gt=now,      # まだ期限前
+        ).exists()
+
+        # 他に有効なキープがなければ、部屋を空室に戻す
+        if not has_active_hold and room.status == RoomStatus.HOLDING:
+            room.status = RoomStatus.AVAILABLE
+            room.save(update_fields=["status", "updated_at"])
