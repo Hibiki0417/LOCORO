@@ -37,6 +37,21 @@
                     <span class="badge bg-secondary">{{ room.get_status_display }}</span>
                 {% endif %}
             </div>
+                            {# キープ中なら残り時間を表示 #}
+                {% if active_reservation %}
+                  {% with mins=active_reservation.get_hold_remaining_minutes %}
+                    {% if mins > 0 %}
+                      <p class="text-muted small mb-2">
+                        この部屋はあと <strong>{{ mins }}</strong> 分キープ中です。
+                      </p>
+                    {% elif mins == 0 %}
+                      <p class="text-muted small mb-2">
+                        キープ時間がまもなく終了します。
+                      </p>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+
 
         </div>
 

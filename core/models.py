@@ -181,6 +181,24 @@ class Reservation(models.Model):
             return True
 
         return False
+    
+        # 残りキープ時間（分）を返す
+    def get_hold_remaining_minutes(self):
+        """キープ中なら残り分数を返す。期限切れなら 0、未設定なら None"""
+        from django.utils import timezone
+
+        if not self.hold_expires_at:
+            return None
+
+        remaining = self.hold_expires_at - timezone.now()
+        seconds = remaining.total_seconds()
+
+        if seconds <= 0:
+            return 0
+
+        # 小数点以下は切り捨て
+        return int(seconds // 60)
+
 
 
 

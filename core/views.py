@@ -27,7 +27,6 @@ class RoomListView(ListView):
             .prefetch_related("images")  # related_name="images"
         )
 
-
 class RoomDetailView(DetailView):
     model = Room
     template_name = 'core/room_detail.html'
@@ -44,6 +43,27 @@ class RoomDetailView(DetailView):
             .select_related("hotel")
             .prefetch_related("images")
         )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        room = self.object
+        now = timezone.now()
+
+        # この部屋の「現在キープ中」の予約を1件だけ取得
+        active_reservation = (
+            Reservation.objects
+            .filter(
+                room=room,
+                status=ReservationStatus.HOLDING,
+                hold_expires_at__gt=now,  # まだ期限前
+            )
+            .order_by("-hold_expires_at")
+            .first()
+        )
+
+        context["active_reservation"] = active_reservation
+        return context
+
 
 @require_POST
 def complete_cleaning(request, pk):
