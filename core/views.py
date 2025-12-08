@@ -18,6 +18,14 @@ class RoomListView(ListView):
         # 画面を開くたびに、期限切れのキープを掃除
         cleanup_expired_holds()
         return super().get(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        # Roomに紐づく画像も一緒に取得
+        return (
+            Room.objects
+            .select_related("hotel")
+            .prefetch_related("images")  # related_name="images"
+        )
 
 
 class RoomDetailView(DetailView):
@@ -29,6 +37,13 @@ class RoomDetailView(DetailView):
         # 詳細画面を開くたびにも掃除しておく
         cleanup_expired_holds()
         return super().get(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        return (
+            Room.objects
+            .select_related("hotel")
+            .prefetch_related("images")
+        )
 
 @require_POST
 def complete_cleaning(request, pk):

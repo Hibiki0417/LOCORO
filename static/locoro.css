@@ -1,0 +1,22 @@
+/* 部屋一覧のカード用カルーセルの高さを揃える */
+.room-card-carousel {
+    width: 100%;
+    height: 240;        /* カード画像の高さ（好みで調整） */
+    overflow: hidden;       /* はみ出しを隠す */
+    position: relative;
+}
+
+/* カルーセルの中身 */
+.room-card-carousel .carousel-item {
+    height: 100%;           /* 親の高さに合わせる */
+}
+
+/* カルーセル画像 ＆ プレースホルダー画像のルールを統一 */
+.room-card-carousel .carousel-item img,
+.room-card-carousel > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;      /* 枠いっぱいに埋める（トリミングあり） */
+    object-position: center; /* ← 中心基準でトリミング（必要なら top に変更可能） */
+    display: block;
+}
