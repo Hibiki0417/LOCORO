@@ -3,7 +3,9 @@ from django.views.generic import ListView, DetailView
 from .models import Room, Reservation
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from datetime import timedelta
 import datetime
+from django.contrib import messages
 
 from .models import Room, Reservation, ReservationStatus, RoomStatus
 
@@ -118,39 +120,50 @@ def start_hold(request, pk):
 
 
 def cleanup_expired_holds():
-    """
-    期限切れのキープ(HOLDING)を掃除する（画面を開いたときに実行）
-
-    - hold_expires_at <= 現在 の Reservation(HOLDING) を CANCELLED にする
-    - 対象の Room に「まだ有効なキープ」がなければ、Room.status を AVAILABLE に戻す
-    """
+    """期限切れの様子見(RESERVED)とキープ(HOLDING)をまとめて掃除"""
     now = timezone.now()
 
-    # 期限切れになっている「キープ中」の予約を全部取得
-    expired_qs = (
-        Reservation.objects
-        .select_related("room")
-        .filter(
-            status=ReservationStatus.HOLDING,
-            hold_expires_at__lte=now,
-        )
+    # --- 1) 様子見(1時間) が切れたもの ---
+    reserved_expired = Reservation.objects.select_related("room").filter(
+        status=ReservationStatus.RESERVED,
+        keep_expires_at__lte=now,
     )
 
-    for reservation in expired_qs:
+    for reservation in reserved_expired:
         room = reservation.room
 
-        # この予約を「期限切れ扱い」に変更
         reservation.status = ReservationStatus.CANCELLED
         reservation.save(update_fields=["status"])
 
-        # この部屋に、まだ有効なキープが他に残っているか？
+        # まだ他に有効な予約枠(RESERVED/HOLDING)が無ければ部屋を空室に戻す
+        has_active = Reservation.objects.filter(
+            room=room,
+            status__in=[ReservationStatus.RESERVED, ReservationStatus.HOLDING],
+            keep_expires_at__gt=now,
+        ).exists()
+
+        if not has_active and room.status == RoomStatus.HOLDING:
+            room.status = RoomStatus.AVAILABLE
+            room.save(update_fields=["status", "updated_at"])
+
+    # --- 2) 清掃後30分キープ(HOLDING) が切れたもの ---
+    holding_expired = Reservation.objects.select_related("room").filter(
+        status=ReservationStatus.HOLDING,
+        hold_expires_at__lte=now,
+    )
+
+    for reservation in holding_expired:
+        room = reservation.room
+
+        reservation.status = ReservationStatus.CANCELLED
+        reservation.save(update_fields=["status"])
+
         has_active_hold = Reservation.objects.filter(
             room=room,
             status=ReservationStatus.HOLDING,
-            hold_expires_at__gt=now,      # まだ期限前
+            hold_expires_at__gt=now,
         ).exists()
 
-        # 他に有効なキープがなければ、部屋を空室に戻す
         if not has_active_hold and room.status == RoomStatus.HOLDING:
             room.status = RoomStatus.AVAILABLE
             room.save(update_fields=["status", "updated_at"])
