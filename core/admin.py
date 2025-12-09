@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Hotel, Room, Reservation, ReservationTicket, RoomImage
+from .models import Hotel, Room, Reservation, ReservationTicket, RoomImage, HotelStaff
 
 # Hotel 管理
 @admin.register(Hotel)
@@ -47,3 +47,11 @@ class ReservationTicketAdmin(admin.ModelAdmin):
         "keep_expires_at",
     )
     list_filter = ("status", "room")
+
+
+
+
+@admin.register(HotelStaff)
+class HotelStaffAdmin(admin.ModelAdmin):
+    list_display = ("user", "hotel", "is_manager")
+    list_filter = ("hotel", "is_manager")

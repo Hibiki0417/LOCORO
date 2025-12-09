@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 class Hotel(models.Model):
     """ホテル1軒分を表すモデル"""
@@ -75,6 +76,34 @@ class Room(models.Model):
         """部屋の状態を共通で更新するメソッド"""
         self.status = new_status
         self.save()
+
+class HotelStaff(models.Model):
+    """ホテルのスタッフ（どのホテルに所属しているかを管理）"""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="staff_profile",
+        verbose_name="ユーザー",
+    )
+    hotel = models.ForeignKey(
+        Hotel,
+        on_delete=models.CASCADE,
+        related_name="staffs",
+        verbose_name="所属ホテル",
+    )
+    is_manager = models.BooleanField(
+        default=True,
+        verbose_name="管理者権限あり",
+    )
+
+    class Meta:
+        verbose_name = "ホテルスタッフ"
+        verbose_name_plural = "ホテルスタッフ一覧"
+
+    def __str__(self) -> str:
+        return f"{self.hotel.name} - {self.user.username}"
+
 
 class RoomImage(models.Model):
     """部屋ごとの画像（最大20枚想定）"""
@@ -245,3 +274,6 @@ class ReservationTicket(models.Model):
 
     def __str__(self):
         return f"{self.room} - {self.get_status_display()}"
+
+
+

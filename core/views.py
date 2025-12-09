@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.views import View
 from .models import Room, Reservation, ReservationStatus, RoomStatus
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 class RoomListView(ListView):
@@ -268,12 +270,12 @@ class ManagerRoomDashboardView(ListView):
     context_object_name = "rooms"
 
     def get_queryset(self):
-        qs = (
-            super()
-            .get_queryset()
-            .select_related("hotel")
-            .order_by("floor", "room_number")
-        )
+        qs = Room.objects.select_related("hotel").order_by("floor", "room_number")
+        staff = getattr(self.request.user, "staff_profile", None)
+
+        if staff and staff.hotel:
+         qs = qs.filter(hotel=staff.hotel)
+      
 
         # フロアでフィルター（?floor=3 など）
         floor = self.request.GET.get("floor")
