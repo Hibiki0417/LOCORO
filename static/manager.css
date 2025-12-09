@@ -1,0 +1,34 @@
+/* 共通カード */
+.room-card {
+    border-radius: 8px;
+}
+
+/* AVAILABLE = "available" */
+.room-card.room-status-available {
+    background-color: #198754;
+    color: #fff;
+}
+
+/* HOLDING = "holding" */
+.room-card.room-status-holding {
+    background-color: #6f42c1;
+    color: #fff;
+}
+
+/* OCCUPIED = "occupied" */
+.room-card.room-status-occupied {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* CLEANING = "cleaning" */
+.room-card.room-status-cleaning {
+    background-color: #ffc107;
+    color: #212529;  /* 文字濃いめ */
+}
+
+/* UNAVAILABLE = "unavailable" */
+.room-card.room-status-unavailable {
+    background-color: #6c757d;
+    color: #fff;
+}

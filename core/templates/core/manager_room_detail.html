@@ -1,5 +1,7 @@
-{% extends "base.html" %}
+{% extends "core/base_manager.html" %}
 {% load static %}
+
+{% block title %}{{ current_hotel.name }} 客室管理 | LOCORO{% endblock %}
 
 {% block content %}
 <div class="container py-4">
