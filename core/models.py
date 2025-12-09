@@ -41,6 +41,7 @@ class Room(models.Model):
         related_name="rooms",
     )
     room_number = models.CharField(max_length=50)       # 部屋番号 or 名前
+    floor = models.IntegerField(default=1, verbose_name="階数")
     capacity = models.PositiveIntegerField(default=2)   # 何名まで想定か
 
     is_smoking = models.BooleanField(default=False)     # 喫煙可か
@@ -63,7 +64,7 @@ class Room(models.Model):
     class Meta:
         verbose_name = "部屋"
         verbose_name_plural = "部屋一覧"
-        unique_together = ("hotel", "room_number")
+        unique_together = ("hotel","floor","room_number")
         ordering = ["hotel", "room_number"]
 
 

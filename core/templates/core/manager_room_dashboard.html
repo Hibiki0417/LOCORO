@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <h1 class="mb-4">客室管理ダッシュボード</h1>
+
+  <!-- フロアタブ -->
+  <ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+      <a class="nav-link {% if not current_floor %}active{% endif %}"
+         href="{% url 'core:manager_dashboard' %}">
+        全フロア
+      </a>
+    </li>
+    {% for fl in floors %}
+      <li class="nav-item">
+        <a class="nav-link {% if current_floor|default:'' == fl|stringformat:'s' %}active{% endif %}"
+           href="{% url 'core:manager_dashboard' %}?floor={{ fl }}">
+          {{ fl }}階
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <!-- ステータスフィルター（任意） -->
+  <div class="mb-3">
+    <span class="me-2">ステータス:</span>
+    <a href="{% url 'core:manager_dashboard' %}{% if current_floor %}?floor={{ current_floor }}{% endif %}"
+       class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">
+      すべて
+    </a>
+
+    {% for value, label in status_choices %}
+      <a
+        href="{% url 'core:manager_dashboard' %}?{% if current_floor %}floor={{ current_floor }}&{% endif %}status={{ value }}"
+        class="btn btn-sm {% if current_status == value %}btn-primary{% else %}btn-outline-primary{% endif %} me-1">
+        {{ label }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- カードグリッド -->
+  <div class="row g-3">
+    {% for room in rooms %}
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+        <a href="{% url 'core:manager_room_detail' room.pk %}" class="text-decoration-none">
+          <div class="card room-status-card room-status-{{ room.status }}">
+            <div class="card-body p-2 text-center">
+              <div class="small text-muted mb-1">
+                {{ room.hotel.name }}
+              </div>
+              <div class="fw-bold">
+                {{ room.room_number }}
+              </div>
+              <div class="small mt-1">
+                {{ room.get_status_display }}
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <p>部屋が登録されていません。</p>
+    {% endfor %}
+  </div>
+
+  <!-- 凡例 -->
+  <div class="mt-4 small">
+    <span class="badge bg-success me-2">空室（予約可）</span>
+    <span class="badge bg-primary me-2">予約枠</span>
+    <span class="badge bg-danger me-2">利用中</span>
+    <span class="badge bg-warning text-dark me-2">清掃中</span>
+    <span class="badge bg-secondary me-2">予約停止中</span>
+  </div>
+
+</div>
+{% endblock %}

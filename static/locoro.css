@@ -20,3 +20,38 @@
     object-position: center; /* ← 中心基準でトリミング（必要なら top に変更可能） */
     display: block;
 }
+
+
+
+/* 店側ダッシュボード：部屋カードの共通スタイル */
+.room-status-card {
+    border-radius: 8px;
+    color: #fff;
+}
+
+/* RoomStatus の値に合わせて色を変える */
+/* AVAILABLE = "available" */
+.room-status-available {
+    background-color: #198754; /* 緑 */
+}
+
+/* HOLDING = "holding" */
+.room-status-holding {
+    background-color: #6f42c1; /* 紫 */
+}
+
+/* OCCUPIED = "occupied" */
+.room-status-occupied {
+    background-color: #dc3545; /* 赤 */
+}
+
+/* CLEANING = "cleaning" */
+.room-status-cleaning {
+    background-color: #ffc107; /* 黄 */
+    color: #212529; /* 文字は黒っぽく */
+}
+
+/* UNAVAILABLE = "unavailable" */
+.room-status-unavailable {
+    background-color: #6c757d; /* グレー */
+}

@@ -6,8 +6,10 @@ from django.utils import timezone
 from datetime import timedelta
 import datetime
 from django.contrib import messages
-
+from django.views import View
 from .models import Room, Reservation, ReservationStatus, RoomStatus
+from django.urls import reverse
+
 
 class RoomListView(ListView):
     model = Room
@@ -202,3 +204,113 @@ def cleanup_expired_holds():
         if not has_active_hold and room.status == RoomStatus.HOLDING:
             room.status = RoomStatus.AVAILABLE
             room.save(update_fields=["status", "updated_at"])
+
+
+
+
+
+class RoomStatusView(View):
+    """
+    店側スタッフが部屋の状態を確認・変更するための画面。
+    - GET  : 部屋の情報と現在ステータスを表示
+    - POST : ボタン(action)に応じて Room.status を更新
+    """
+
+    template_name = "core/manager_room_detail.html"
+
+    def get(self, request, pk):
+        """部屋の情報を表示"""
+        room = get_object_or_404(Room, pk=pk)
+        context = {
+            "room": room,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        """
+        スタッフが押したボタンに応じてステータスを変更する。
+        - action = "checkout"   : 利用中 → 清掃中 にする想定
+        - action = "clean_done" : 清掃中 → 空室（予約可）にする想定
+        必要に応じて分岐を増やせば OK。
+        """
+        room = get_object_or_404(Room, pk=pk)
+        action = request.POST.get("action")
+
+        # 利用終了（チェックアウト）→ 清掃中へ
+        if action == "checkout":
+            if room.status == RoomStatus.OCCUPIED:
+                room.status = RoomStatus.CLEANING
+                room.save()
+
+        # 清掃完了 → 空室（予約可）へ
+        elif action == "clean_done":
+            if room.status == RoomStatus.CLEANING:
+                room.status = RoomStatus.AVAILABLE
+                room.save()
+
+        # 将来、キープ開始などをここに追加してもいい
+        # elif action == "start_hold":
+        #     ...
+
+        # 更新後、同じ画面にリダイレクト
+        return redirect("core:manager_room_detail", pk=room.pk)
+
+
+class ManagerRoomDashboardView(ListView):
+    """
+    ホテル全体の客室ステータスを一覧表示するダッシュボード。
+    ・フロア別タブ
+    ・ステータス別フィルター（オプション）
+    """
+
+    model = Room
+    template_name = "core/manager_room_dashboard.html"
+    context_object_name = "rooms"
+
+    def get_queryset(self):
+        qs = (
+            super()
+            .get_queryset()
+            .select_related("hotel")
+            .order_by("floor", "room_number")
+        )
+
+        # フロアでフィルター（?floor=3 など）
+        floor = self.request.GET.get("floor")
+        if floor:
+            try:
+                qs = qs.filter(floor=int(floor))
+            except ValueError:
+                pass
+
+        # ステータスでフィルター（?status=available など）
+        status = self.request.GET.get("status")
+        if status:
+            qs = qs.filter(status=status)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # フロア一覧（存在するフロアだけ）
+        floors = (
+            Room.objects.values_list("floor", flat=True)
+            .distinct()
+            .order_by("floor")
+        )
+
+        context["floors"] = floors
+        context["current_floor"] = self.request.GET.get("floor")
+        context["current_status"] = self.request.GET.get("status")
+
+        # ステータス一覧（ラベル付き）
+        context["status_choices"] = [
+            (RoomStatus.AVAILABLE, "空室（予約可）"),
+            (RoomStatus.HOLDING, "予約枠"),
+            (RoomStatus.OCCUPIED, "利用中"),
+            (RoomStatus.CLEANING, "清掃中"),
+            (RoomStatus.UNAVAILABLE, "予約停止中"),
+        ]
+
+        return context
