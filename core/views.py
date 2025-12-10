@@ -7,10 +7,12 @@ from datetime import timedelta
 import datetime
 from django.contrib import messages
 from django.views import View
-from .models import Room, Reservation, ReservationStatus, RoomStatus
+from .models import Room, Reservation, ReservationStatus, RoomStatus, HotelStaff
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class RoomListView(ListView):
@@ -316,3 +318,61 @@ class ManagerRoomDashboardView(ListView):
         ]
 
         return context
+
+
+class ManagerRoomStatusApiView(LoginRequiredMixin, View):
+    """店側ダッシュボードからのステータス更新API"""
+
+    def post(self, request, pk):
+        room = get_object_or_404(Room, pk=pk)
+
+        # ★ ホテルスタッフとホテルの紐付けチェック
+        try:
+            staff = request.user.hotelstaff
+        except HotelStaff.DoesNotExist:
+            return JsonResponse(
+                {"success": False, "message": "ホテルスタッフのみ操作できます。"},
+                status=403,
+            )
+
+        if room.hotel != staff.hotel:
+            return JsonResponse(
+                {"success": False, "message": "このホテルの部屋ではありません。"},
+                status=403,
+            )
+
+        action = request.POST.get("action")
+
+        # 退出 → 利用中 → 清掃中 にする
+        if action == "checkout":
+            if room.status != RoomStatus.OCCUPIED:
+                return JsonResponse(
+                    {"success": False, "message": "「利用中」の部屋だけ退室できます。"},
+                    status=400,
+                )
+            room.status = RoomStatus.CLEANING
+
+        # 清掃完了 → 清掃中 → 空室（予約可）にする
+        elif action == "clean_done":
+            if room.status != RoomStatus.CLEANING:
+                return JsonResponse(
+                    {"success": False, "message": "「清掃中」の部屋だけ空室にできます。"},
+                    status=400,
+                )
+            room.status = RoomStatus.AVAILABLE
+
+        else:
+            return JsonResponse(
+                {"success": False, "message": "不正な操作です。"},
+                status=400,
+            )
+
+        room.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "new_status": room.status,
+                "new_status_label": room.get_status_display(),
+            }
+        )
