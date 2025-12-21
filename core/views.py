@@ -328,7 +328,7 @@ class ManagerRoomStatusApiView(LoginRequiredMixin, View):
 
         # ★ ホテルスタッフとホテルの紐付けチェック
         try:
-            staff = request.user.hotelstaff
+            staff = request.user.staff_profile
         except HotelStaff.DoesNotExist:
             return JsonResponse(
                 {"success": False, "message": "ホテルスタッフのみ操作できます。"},
