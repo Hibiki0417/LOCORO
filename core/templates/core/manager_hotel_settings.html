@@ -1,0 +1,25 @@
+{# app/core/templates/core/manager_hotel_settings.html #}
+{% extends "core/base_manager.html" %}
+{% load static %}
+
+{% block content %}
+<div class="mt-4">
+  <h2 class="mb-3">店舗情報の編集（客側に表示される内容）</h2>
+
+  <div class="card p-3">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <a href="{% url 'core:manager_dashboard' %}" class="btn btn-outline-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+
+  <p class="text-muted mt-3" style="font-size: 0.9rem;">
+    ※ 画像や店舗名などは客側ページにも表示されます。
+  </p>
+</div>
+{% endblock %}

@@ -1,18 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
-from .models import Room, Reservation
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from datetime import timedelta
 import datetime
 from django.contrib import messages
 from django.views import View
-from .models import Room, Reservation, ReservationStatus, RoomStatus, HotelStaff
-from django.urls import reverse
+from django.views.generic.edit import UpdateView
+from .models import Room, Reservation, ReservationStatus, RoomStatus, HotelStaff, Hotel
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.http import JsonResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse, HttpResponseForbidden
 
 
 class RoomListView(ListView):
@@ -376,3 +376,27 @@ class ManagerRoomStatusApiView(LoginRequiredMixin, View):
                 "new_status_label": room.get_status_display(),
             }
         )
+
+
+class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
+    model = Hotel
+    template_name = "core/manager_hotel_settings.html"
+    fields = ["name", "address", "phone_number", "image", "is_active"]
+
+    def get_object(self, queryset=None):
+        # staff_profile 方式に統一してる前提
+        staff = getattr(self.request.user, "staff_profile", None)
+        if not staff:
+            return None  # dispatchで弾く
+
+        return staff.hotel
+
+    def dispatch(self, request, *args, **kwargs):
+        staff = getattr(request.user, "staff_profile", None)
+        if not staff:
+            return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        # 成功後はダッシュボードへ戻す
+        return reverse_lazy("core:manager_dashboard")
