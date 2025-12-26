@@ -9,6 +9,47 @@
       ← 部屋一覧に戻る
     </a>
   </div>
+<!-- 画像カルーセル（最大20枚） -->
+<div id="roomDetailCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+    
+    <!-- インジケーター（●●●） -->
+    <div class="carousel-indicators">
+        {% for img in room.images.all %}
+            <button type="button"
+                    data-bs-target="#roomDetailCarousel"
+                    data-bs-slide-to="{{ forloop.counter0 }}"
+                    class="{% if forloop.first %}active{% endif %}"
+                    aria-current="{% if forloop.first %}true{% endif %}"
+                    aria-label="Slide {{ forloop.counter }}">
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- メイン画像スライド -->
+    <div class="carousel-inner">
+        {% for img in room.images.all %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <img src="{{ img.image.url }}"
+                     class="d-block w-100"
+                     style="height: 420px; object-fit: cover;"
+                     alt="{{ room.name }} image {{ forloop.counter }}">
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- 左右ボタン -->
+    {% if room.images.count > 1 %}
+        <button class="carousel-control-prev" type="button" data-bs-target="#roomDetailCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+
+        <button class="carousel-control-next" type="button" data-bs-target="#roomDetailCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    {% endif %}
+</div>
 
   <div class="row g-4">
     <!-- 左：部屋情報カード -->
