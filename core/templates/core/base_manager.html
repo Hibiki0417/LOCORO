@@ -21,9 +21,13 @@
     <div class="container-fluid d-flex justify-content-between">
 
       <!-- 左側：タイトル -->
-      <span class="navbar-brand">
-        LOCORO 管理画面
-      </span>
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:manager_dashboard' %}">
+        <img
+          src="{% static 'images/locoro-logo.png' %}"
+          alt="LOCORO"
+          style="height:28px; width:auto; display:block;"
+        />
+      </a>
 
       <!-- 右側：ホテル名 + 管理メニュー -->
       <div class="d-flex align-items-center gap-3">
