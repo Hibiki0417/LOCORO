@@ -26,12 +26,19 @@ class RoomListView(ListView):
         return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
-        # Roomに紐づく画像も一緒に取得
-        return (
+        hotel_id = self.kwargs.get("hotel_id")
+
+        qs = (
             Room.objects
             .select_related("hotel")
-            .prefetch_related("images")  # related_name="images"
+            .prefetch_related("images")
         )
+
+        if hotel_id:
+            qs = qs.filter(hotel_id=hotel_id)
+
+        return qs
+
 
 class RoomDetailView(DetailView):
     model = Room
@@ -400,3 +407,13 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         # 成功後はダッシュボードへ戻す
         return reverse_lazy("core:manager_dashboard")
+    
+
+class HotelListView(ListView):
+    model = Hotel
+    template_name = "core/hotel_list.html"
+    context_object_name = "hotels"
+
+    def get_queryset(self):
+        # 公開（有効）ホテルだけを一覧表示
+        return Hotel.objects.filter(is_active=True).order_by("name")

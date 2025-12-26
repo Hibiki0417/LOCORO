@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">部屋一覧</h1>
+
+{% if rooms %}
+  <h2 class="mb-4">{{ rooms.0.hotel.name }} の部屋一覧</h2>
+{% endif %}
+
 
 <div class="row">
   {% for room in object_list %}
