@@ -45,3 +45,14 @@
 .js-room-card {
   cursor: pointer;
 }
+
+/* navbar background (manager) */
+.locoro-manager-navbar {
+  background-color: #0b1220; /* 店側は少し違う色でもOK */
+}
+
+/* 同じロゴクラスを使うなら、ここは不要。
+   店側だけサイズ変えたいなら上書きできる */
+.locoro-manager-navbar .locoro-navbar-logo {
+  height: 28px;
+}

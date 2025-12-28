@@ -17,17 +17,18 @@
 <body class="bg-light">
 
   <!-- 店側ナビバー -->
-  <nav class="navbar navbar-dark bg-dark mb-4">
+  <nav class="navbar navbar-dark locoro-manager-navbar mb-4">
     <div class="container-fluid d-flex justify-content-between">
 
       <!-- 左側：タイトル -->
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:manager_dashboard' %}">
-        <img
-          src="{% static 'images/locoro-logo.png' %}"
-          alt="LOCORO"
-          style="height:28px; width:auto; display:block;"
-        />
-      </a>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:manager_dashboard' %}">
+      <img
+        src="{% static 'images/locoro-logo.png' %}"
+        alt="LOCORO"
+        class="locoro-navbar-logo"
+      />
+    </a>
+
 
       <!-- 右側：ホテル名 + 管理メニュー -->
       <div class="d-flex align-items-center gap-3">
