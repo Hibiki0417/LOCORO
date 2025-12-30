@@ -112,8 +112,8 @@
   let selectedRoomStatus = null;
 
   const labelEl = document.getElementById('selected-room-label');
-  const btnCheckout = document.getElementById('btn-checkout');
-  const btnCleanDone = document.getElementById('btn-clean-done');
+  let btnCheckout = document.getElementById('btn-checkout');
+  let btnCleanDone = document.getElementById('btn-clean-done');
 
   function updateButtons() {
     // 利用中のときだけ「退出」活性
@@ -135,6 +135,8 @@
 
     labelEl.textContent = selectedRoomNumber ? (selectedRoomNumber + '号室') : 'なし';
     updateButtons();
+    isPosting = false;
+
   }
 
   // カードクリックで選択
@@ -143,6 +145,8 @@
   });
 
   function postAction(action) {
+    if (isPosting) return;
+    isPosting = true;
     if (!selectedRoomId) return;
     if (!window.confirm('この部屋のステータスを変更しますか？')) {
       return;
@@ -185,15 +189,43 @@
       }
 
       updateButtons();
+      isPosting = false;
+
     })
     .catch(err => {
       console.error(err);
       alert('通信エラーが発生しました');
+      isPosting = false;
+
     });
   }
+  // ===== FIX: prevent duplicate binding & keep latest button refs =====
+  let isPosting = false;
 
-  btnCheckout && btnCheckout.addEventListener('click', () => postAction('checkout'));
-  btnCleanDone && btnCleanDone.addEventListener('click', () => postAction('clean_done'));
+  // 既存イベントを確実に消す（cloneでDOM差し替え）
+  if (btnCheckout) {
+    const cloned = btnCheckout.cloneNode(true);
+    btnCheckout.parentNode.replaceChild(cloned, btnCheckout);
+  }
+  if (btnCleanDone) {
+    const cloned = btnCleanDone.cloneNode(true);
+    btnCleanDone.parentNode.replaceChild(cloned, btnCleanDone);
+  }
+
+  // 重要：参照を取り直す（updateButtonsが現物ボタンを操作できるように）
+  btnCheckout = document.getElementById('btn-checkout');
+  btnCleanDone = document.getElementById('btn-clean-done');
+
+  // クリック → 送信（多重送信ガード付き）
+  btnCheckout?.addEventListener('click', () => {
+    if (isPosting) return;
+    postAction('checkout');
+  });
+  btnCleanDone?.addEventListener('click', () => {
+    if (isPosting) return;
+    postAction('clean_done');
+  });
+
 
   // DjangoのcsrftokenをCookieから取る関数
   function getCookie(name) {
