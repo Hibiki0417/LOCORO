@@ -24,7 +24,7 @@
 /* ナビバーの高さを固定 */
 .locoro-navbar{
   height:110px;                 /* ここがナビバーの高さ */
-  background-color: #c0c1f8 !important;
+  background-color: #424386 !important;
   padding: 2 20px;              /* 縦paddingは0にする */
   display: flex;
   align-items: center;          /* 縦中央 */
