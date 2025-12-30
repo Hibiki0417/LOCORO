@@ -1,28 +1,55 @@
 from django.contrib import admin
-from .models import Hotel, Room, Reservation, ReservationTicket, RoomImage, HotelStaff
+from django.urls import reverse
+from django.utils.html import format_html
 
-# Hotel 管理
-@admin.register(Hotel)
-class HotelAdmin(admin.ModelAdmin):
-    list_display = ("name", "address", "is_active")
-    list_filter = ("is_active",)
+from .models import (
+    Hotel,
+    Room,
+    Reservation,
+    ReservationTicket,
+    RoomImage,
+    HotelStaff,
+)
 
-# Room 管理
-# RoomImage を Room にインラインで表示
+# --------------------
+# RoomImage Inline
+# --------------------
 class RoomImageInline(admin.TabularInline):
     model = RoomImage
-    extra = 1           # 新規行を1つ表示
-    max_num = 20        # 画像は最大20枚まで
-    
+    extra = 0
+    max_num = 20
+
+
+# --------------------
+# Room Admin
+# --------------------
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("hotel", "room_number", "status", "is_available")
-    list_filter = ("status", "hotel")
-    inlines = [RoomImageInline] 
+    list_display = ("room_number", "hotel", "status")
+    list_filter = ("hotel", "status")
+    inlines = [RoomImageInline]
 
 
+# --------------------
+# Hotel Admin（※ ここだけで Hotel を登録）
+# --------------------
+@admin.register(Hotel)
+class HotelAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "rooms_link")
 
-# Reservation 管理（予約）
+    def rooms_link(self, obj):
+        url = (
+            reverse("admin:core_room_changelist")
+            + f"?hotel__id__exact={obj.id}"
+        )
+        return format_html('<a href="{}">部屋一覧を見る</a>', url)
+
+    rooms_link.short_description = "部屋"
+
+
+# --------------------
+# Reservation
+# --------------------
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
     list_display = (
@@ -36,7 +63,10 @@ class ReservationAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "hotel", "room")
 
-# ReservationTicket 管理（ユーザーの予約権利）
+
+# --------------------
+# ReservationTicket
+# --------------------
 @admin.register(ReservationTicket)
 class ReservationTicketAdmin(admin.ModelAdmin):
     list_display = (
@@ -49,8 +79,9 @@ class ReservationTicketAdmin(admin.ModelAdmin):
     list_filter = ("status", "room")
 
 
-
-
+# --------------------
+# HotelStaff
+# --------------------
 @admin.register(HotelStaff)
 class HotelStaffAdmin(admin.ModelAdmin):
     list_display = ("user", "hotel", "is_manager")
