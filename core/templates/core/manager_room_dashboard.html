@@ -8,6 +8,10 @@
 
   <h1 class="mb-4">客室管理ダッシュボード</h1>
 
+  <!-- JS通知エリア -->
+  <div id="js-alert" class="alert d-none" role="alert"></div>
+
+
       <!-- 選択中の部屋パネル -->
     <div class="card mb-3">
       <div class="card-body d-flex justify-content-between align-items-center">
@@ -105,27 +109,44 @@
 
 {% block extra_js %}
 <script>
-(function() {
+(function () {
   let selectedCard = null;
   let selectedRoomId = null;
   let selectedRoomNumber = null;
   let selectedRoomStatus = null;
+  let isPosting = false;
 
   const labelEl = document.getElementById('selected-room-label');
   let btnCheckout = document.getElementById('btn-checkout');
   let btnCleanDone = document.getElementById('btn-clean-done');
+  const alertEl = document.getElementById('js-alert');
 
+  // ===== 通知表示 =====
+  function showAlert(message, type = 'danger', timeout = 4000) {
+    if (!alertEl) return;
+    alertEl.className = `alert alert-${type}`;
+    alertEl.textContent = message;
+    alertEl.classList.remove('d-none');
+
+    if (timeout) {
+      setTimeout(() => {
+        alertEl.classList.add('d-none');
+      }, timeout);
+    }
+  }
+
+  // ===== ボタン活性制御 =====
   function updateButtons() {
-    // 利用中のときだけ「退出」活性
     btnCheckout.disabled = !(selectedRoomId && selectedRoomStatus === 'occupied');
-    // 清掃中のときだけ「清掃完了」活性
     btnCleanDone.disabled = !(selectedRoomId && selectedRoomStatus === 'cleaning');
   }
 
+  // ===== カード選択 =====
   function selectCard(card) {
     if (selectedCard) {
       selectedCard.classList.remove('room-card-selected');
     }
+
     selectedCard = card;
     selectedCard.classList.add('room-card-selected');
 
@@ -133,24 +154,32 @@
     selectedRoomNumber = card.dataset.roomNumber;
     selectedRoomStatus = card.dataset.roomStatus;
 
-    labelEl.textContent = selectedRoomNumber ? (selectedRoomNumber + '号室') : 'なし';
+    labelEl.textContent = selectedRoomNumber
+      ? `${selectedRoomNumber}号室`
+      : 'なし';
+
     updateButtons();
     isPosting = false;
-
   }
 
-  // カードクリックで選択
   document.querySelectorAll('.js-room-card').forEach(card => {
     card.addEventListener('click', () => selectCard(card));
   });
 
+  // ===== API送信 =====
   function postAction(action) {
     if (isPosting) return;
-    isPosting = true;
-    if (!selectedRoomId) return;
+
+    if (!selectedRoomId) {
+      showAlert('部屋を選択してください', 'warning');
+      return;
+    }
+
     if (!window.confirm('この部屋のステータスを変更しますか？')) {
       return;
     }
+
+    isPosting = true;
 
     fetch(`/manager/api/rooms/${selectedRoomId}/status/`, {
       method: 'POST',
@@ -159,75 +188,60 @@
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRFToken': getCookie('csrftoken'),
       },
-      body: new URLSearchParams({ action: action }),
+      body: new URLSearchParams({ action }),
     })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        alert(data.message || '更新に失敗しました');
-        return;
-      }
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          showAlert(data.message || '更新に失敗しました', 'danger');
+          isPosting = false;
+          return;
+        }
 
-      // 状態の更新
-      selectedRoomStatus = data.new_status;
-      selectedCard.dataset.roomStatus = data.new_status;
+        // 状態更新
+        selectedRoomStatus = data.new_status;
+        selectedCard.dataset.roomStatus = data.new_status;
 
-      // ステータスクラスを付け替え
-      selectedCard.classList.remove(
-        'room-status-available',
-        'room-status-holding',
-        'room-status-occupied',
-        'room-status-cleaning',
-        'room-status-unavailable',
-      );
-      selectedCard.classList.add('room-status-' + data.new_status);
+        selectedCard.classList.remove(
+          'room-status-available',
+          'room-status-holding',
+          'room-status-occupied',
+          'room-status-cleaning',
+          'room-status-unavailable'
+        );
+        selectedCard.classList.add(`room-status-${data.new_status}`);
 
-      // ステータス表示文言
-      const statusLabelEl = selectedCard.querySelector('.js-room-status-label');
-      if (statusLabelEl && data.new_status_label) {
-        statusLabelEl.textContent = data.new_status_label;
-      }
+        const statusLabelEl = selectedCard.querySelector('.js-room-status-label');
+        if (statusLabelEl && data.new_status_label) {
+          statusLabelEl.textContent = data.new_status_label;
+        }
 
-      updateButtons();
-      isPosting = false;
-
-    })
-    .catch(err => {
-      console.error(err);
-      alert('通信エラーが発生しました');
-      isPosting = false;
-
-    });
+        updateButtons();
+        showAlert('ステータスを更新しました', 'success', 2000);
+        isPosting = false;
+      })
+      .catch(err => {
+        console.error(err);
+        showAlert('通信エラーが発生しました', 'danger');
+        isPosting = false;
+      });
   }
-  // ===== FIX: prevent duplicate binding & keep latest button refs =====
-  let isPosting = false;
 
-  // 既存イベントを確実に消す（cloneでDOM差し替え）
+  // ===== ボタン再バインド =====
   if (btnCheckout) {
-    const cloned = btnCheckout.cloneNode(true);
-    btnCheckout.parentNode.replaceChild(cloned, btnCheckout);
+    btnCheckout.replaceWith(btnCheckout.cloneNode(true));
   }
   if (btnCleanDone) {
-    const cloned = btnCleanDone.cloneNode(true);
-    btnCleanDone.parentNode.replaceChild(cloned, btnCleanDone);
+    btnCleanDone.replaceWith(btnCleanDone.cloneNode(true));
   }
 
-  // 重要：参照を取り直す（updateButtonsが現物ボタンを操作できるように）
   btnCheckout = document.getElementById('btn-checkout');
   btnCleanDone = document.getElementById('btn-clean-done');
 
-  // クリック → 送信（多重送信ガード付き）
-  btnCheckout?.addEventListener('click', () => {
-    if (isPosting) return;
-    postAction('checkout');
-  });
-  btnCleanDone?.addEventListener('click', () => {
-    if (isPosting) return;
-    postAction('clean_done');
-  });
+  btnCheckout?.addEventListener('click', () => postAction('checkout'));
+  btnCleanDone?.addEventListener('click', () => postAction('clean_done'));
 
-
-  // DjangoのcsrftokenをCookieから取る関数
+  // ===== CSRF =====
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -235,6 +249,9 @@
   }
 })();
 </script>
+
+
+
 {% endblock %}
 
 
