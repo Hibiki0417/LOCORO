@@ -8,9 +8,11 @@ app_name = "core"
 urlpatterns = [
     path("rooms/", RoomListView.as_view(), name="room_list"),
     path("hotels/", HotelListView.as_view(), name="hotel_list"),
+
+    path("manager/login/", views.ManagerLoginView.as_view(), name="manager_login"),
     path("manager/",ManagerRoomDashboardView.as_view(),name="manager_dashboard",),
     path("manager/hotel/settings/", views.ManagerHotelSettingsView.as_view(), name="manager_hotel_settings"),
-     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("manager/logout/", auth_views.LogoutView.as_view(), name="manager_logout"),
 
     path("rooms/<int:pk>/detail", RoomDetailView.as_view(), name="room_detail"),
     path("rooms/<int:pk>/start_hold/",start_hold,name="start_hold"),

@@ -13,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse, HttpResponseForbidden
-
+from django.contrib.auth.views import LoginView
 
 class RoomListView(ListView):
     model = Room
@@ -267,26 +267,27 @@ class RoomStatusView(View):
         return redirect("core:manager_room_detail", pk=room.pk)
 
 
-class ManagerRoomDashboardView(ListView):
+class ManagerRoomDashboardView(LoginRequiredMixin, ListView):
     """
-    ホテル全体の客室ステータスを一覧表示するダッシュボード。
+    ホテル全体の空室ステータスを一覧表示するダッシュボード。
     ・フロア別タブ
     ・ステータス別フィルター（オプション）
     """
-
     model = Room
     template_name = "core/manager_room_dashboard.html"
     context_object_name = "rooms"
+    login_url = reverse_lazy("core:manager_login")
 
     def get_queryset(self):
         qs = Room.objects.select_related("hotel").order_by("floor", "room_number")
         staff = getattr(self.request.user, "staff_profile", None)
 
         if staff and staff.hotel:
-         qs = qs.filter(hotel=staff.hotel)
-      
+            qs = qs.filter(hotel=staff.hotel)
+        else:
+            qs = qs.none()
 
-        # フロアでフィルター（?floor=3 など）
+        # フロアでフィルター (?floor=3 など)
         floor = self.request.GET.get("floor")
         if floor:
             try:
@@ -294,7 +295,7 @@ class ManagerRoomDashboardView(ListView):
             except ValueError:
                 pass
 
-        # ステータスでフィルター（?status=available など）
+        # ステータスでフィルター (?status=available など)
         status = self.request.GET.get("status")
         if status:
             qs = qs.filter(status=status)
@@ -318,7 +319,7 @@ class ManagerRoomDashboardView(ListView):
         # ステータス一覧（ラベル付き）
         context["status_choices"] = [
             (RoomStatus.AVAILABLE, "空室（予約可）"),
-            (RoomStatus.HOLDING, "予約枠"),
+            (RoomStatus.HOLDING, "予約中"),
             (RoomStatus.OCCUPIED, "利用中"),
             (RoomStatus.CLEANING, "清掃中"),
             (RoomStatus.UNAVAILABLE, "予約停止中"),
@@ -417,3 +418,23 @@ class HotelListView(ListView):
     def get_queryset(self):
         # 公開（有効）ホテルだけを一覧表示
         return Hotel.objects.filter(is_active=True).order_by("name")
+
+class ManagerLoginView(LoginView):
+    template_name = "core/manager_login.html"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy("core:manager_dashboard")
+
+    def form_valid(self, form):
+        user = form.get_user()
+
+        if not hasattr(user, "staff_profile"):
+            form.add_error(None, "ホテルスタッフアカウントではありません。")
+            return self.form_invalid(form)
+
+        if not user.is_active:
+            form.add_error(None, "このアカウントは無効です。")
+            return self.form_invalid(form)
+
+        return super().form_valid(form)

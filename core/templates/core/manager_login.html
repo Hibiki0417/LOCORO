@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCORO 管理画面ログイン</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'manager.css' %}">
+</head>
+<body class="bg-light">
+
+    <div class="container">
+        <div class="row justify-content-center" style="min-height: 100vh; align-items: center;">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h4 text-center mb-4">ホテル管理ログイン</h1>
+
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                ユーザー名またはパスワードが正しくありません。
+                            </div>
+                        {% endif %}
+
+                        {% if next %}
+                            <p class="text-muted small">ログイン後に続きの画面へ移動します。</p>
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-dark w-100">ログイン</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
