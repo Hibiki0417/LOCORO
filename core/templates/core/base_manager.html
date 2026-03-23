@@ -61,9 +61,12 @@
             {# ログアウト導線がある場合のみ有効化 #}
           
             <li>
-              <a class="dropdown-item text-danger" href="{% url 'core:manager_logout' %}">
-                ログアウト
-              </a>
+              <form method="post" action="{% url 'core:manager_logout' %}" class="m-0">
+                {% csrf_token %}
+               <button type="submit" class="dropdown-item text-danger">
+                  ログアウト
+               </button>
+              </form>
             </li>
             
           </ul>
