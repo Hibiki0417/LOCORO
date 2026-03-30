@@ -1,9 +1,17 @@
 /* 部屋一覧のカード用カルーセルの高さを揃える */
 .room-card-carousel {
     width: 100%;
-    height: 240;        /* カード画像の高さ（好みで調整） */
+    height: 240px;        /* カード画像の高さ（好みで調整） */
     overflow: hidden;       /* はみ出しを隠す */
     position: relative;
+}
+
+.hotel-list-image {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 /* カルーセルの中身 */
@@ -21,18 +29,26 @@
     display: block;
 }
 
-/* ナビバーの高さを固定 */
-.locoro-navbar{
-  height:110px;                 /* ここがナビバーの高さ */
-  background-color: #424386 !important;
-  padding: 2 20px;              /* 縦paddingは0にする */
-  display: flex;
-  align-items: center;          /* 縦中央 */
+.locoro-navbar {
+    height: 90px;
+    background-color: #233e74 !important;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* ロゴはこの高さまで */
-.locoro-navbar-logo{
-  height: 140px;           /* ロゴの見た目サイズ */
-  width: 140px;
-  display: block;
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.locoro-navbar-logo {
+    height: 50px;
+    width: auto;
+    display: block;
 }
