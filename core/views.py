@@ -425,7 +425,7 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy("core:manager_hotel_settings")
+        return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"
     
 
 class HotelListView(ListView):

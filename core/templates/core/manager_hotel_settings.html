@@ -44,71 +44,50 @@
 
     <!-- 客室情報タブ -->
     <div class="manager-settings-panel" id="room-info">
-        <div class="manager-settings-card">
-            <div class="manager-room-tab-header">
-                <div>
-                    <h3 class="manager-settings-section-title">客室情報</h3>
-                    <p class="manager-room-tab-subtitle">
-                        客室の追加・編集・確認を行います
-                    </p>
-                </div>
-
-                <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
-                    ＋ 客室を追加
-                </a>
+    <div class="manager-settings-card">
+        <div class="manager-room-tab-header">
+            <div>
+                <h3 class="manager-settings-section-title">客室情報</h3>
+                <p class="manager-room-tab-subtitle">
+                    客室の追加・編集・確認を行います
+                </p>
             </div>
 
-              <div class="manager-settings-panel" id="room-info">
-                  <div class="manager-settings-card">
-                      <div class="manager-room-tab-header">
-                          <div>
-                              <h3 class="manager-settings-section-title">客室情報</h3>
-                              <p class="manager-room-tab-subtitle">
-                                  客室の追加・編集・確認を行います
-                              </p>
-                          </div>
-
-                          <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
-                              ＋ 客室を追加
-                          </a>
-                      </div>
-
-                      <div class="manager-room-list">
-                          {% for room in rooms %}
-                          <div class="manager-room-item">
-                              <div class="manager-room-item-left">
-                                  <div class="manager-room-number">
-                                      {{ room.room_number }}号室
-                                  </div>
-                                  <div class="manager-room-meta">
-                                      {{ room.get_status_display }} / {{ room.floor }}階
-                                  </div>
-                              </div>
-
-                              <div class="manager-room-item-right">
-                                  <a href="{% url 'core:manager_room_detail' room.pk %}" class="btn btn-outline-primary btn-sm">
-                                      編集
-                                  </a>
-                              </div>
-                          </div>
-                          {% empty %}
-                          <div class="manager-room-empty">
-                              まだ客室が登録されていません。
-                          </div>
-                          {% endfor %}
-                      </div>
-
-                      <p class="manager-settings-note mt-3">
-                          ※ 「編集」から各客室の状態や詳細を確認できます。
-                      </p>
-                  </div>
-              </div>
-
-            <p class="manager-settings-note mt-3">
-                ※ 後でこのエリアに実際の客室一覧を表示するように接続します。
-            </p>
+            <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
+                ＋ 客室を追加
+            </a>
         </div>
+
+        <div class="manager-room-list">
+            {% for room in rooms %}
+            <div class="manager-room-item">
+                <div class="manager-room-item-left">
+                    <div class="manager-room-number">
+                        {{ room.room_number }}号室
+                    </div>
+                    <div class="manager-room-meta">
+                        {{ room.get_status_display }} / {{ room.floor }}階
+                    </div>
+                </div>
+
+                <div class="manager-room-item-right">
+                    <a href="{% url 'core:manager_room_detail' room.pk %}" class="btn btn-outline-primary btn-sm">
+                        編集
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="manager-room-empty">
+                まだ客室が登録されていません。
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="manager-settings-note mt-3">
+            ※ 「編集」から各客室の状態や詳細を確認できます。
+        </p>
     </div>
+</div>
 </div>
 
 <script>
