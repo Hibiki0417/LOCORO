@@ -381,3 +381,13 @@
         text-align: center;
     }
 }
+
+.manager-room-empty {
+    padding: 24px 20px;
+    border: 1px dashed #cfd8e3;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: #6c757d;
+    text-align: center;
+    font-size: 0.95rem;
+}

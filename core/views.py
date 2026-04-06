@@ -392,11 +392,9 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
     fields = ["name", "address", "phone_number", "image", "is_active"]
 
     def get_object(self, queryset=None):
-        # staff_profile 方式に統一してる前提
         staff = getattr(self.request.user, "staff_profile", None)
         if not staff:
-            return None  # dispatchで弾く
-
+            return None
         return staff.hotel
 
     def dispatch(self, request, *args, **kwargs):
@@ -405,9 +403,29 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
             return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        staff = getattr(self.request.user, "staff_profile", None)
+        hotel = getattr(staff, "hotel", None)
+
+        if hotel:
+            context["rooms"] = (
+                Room.objects
+                .filter(hotel=hotel)
+                .order_by("floor", "room_number")
+            )
+        else:
+            context["rooms"] = Room.objects.none()
+
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "店舗情報を更新しました。")
+        return super().form_valid(form)
+
     def get_success_url(self):
-        # 成功後はダッシュボードへ戻す
-        return reverse_lazy("core:manager_dashboard")
+        return reverse_lazy("core:manager_hotel_settings")
     
 
 class HotelListView(ListView):
