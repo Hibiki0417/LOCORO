@@ -1,25 +1,119 @@
-{# app/core/templates/core/manager_hotel_settings.html #}
 {% extends "core/base_manager.html" %}
 {% load static %}
 
 {% block content %}
-<div class="mt-4">
-  <h2 class="mb-3">店舗情報の編集（お客様側に表示される内容）</h2>
+<div class="manager-settings-page">
 
-  <div class="card p-3">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ form.as_p }}
+    <div class="manager-settings-header">
+        <h2 class="manager-settings-title">店舗設定</h2>
+        <p class="manager-settings-subtitle">
+            店舗情報の編集と客室情報の管理を行えます
+        </p>
+    </div>
 
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">保存</button>
-        <a href="{% url 'core:manager_dashboard' %}" class="btn btn-outline-secondary">戻る</a>
-      </div>
-    </form>
-  </div>
+    <!-- タブ -->
+    <div class="manager-settings-tabs">
+        <button type="button" class="manager-settings-tab active" data-tab="hotel-info">
+            店舗情報
+        </button>
+        <button type="button" class="manager-settings-tab" data-tab="room-info">
+            客室情報
+        </button>
+    </div>
 
-  <p class="text-muted mt-3" style="font-size: 0.9rem;">
-    ※ 画像や店舗名などはお客様側ページにも表示されます。
-  </p>
+    <!-- 店舗情報タブ -->
+    <div class="manager-settings-panel active" id="hotel-info">
+        <div class="manager-settings-card">
+            <h3 class="manager-settings-section-title">店舗情報の編集</h3>
+
+            <form method="post" enctype="multipart/form-data" class="manager-settings-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <div class="manager-settings-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{% url 'core:manager_dashboard' %}" class="btn btn-outline-secondary">戻る</a>
+                </div>
+            </form>
+        </div>
+
+        <p class="manager-settings-note">
+            ※ 画像や店舗名などはお客様側ページにも表示されます。
+        </p>
+    </div>
+
+    <!-- 客室情報タブ -->
+    <div class="manager-settings-panel" id="room-info">
+        <div class="manager-settings-card">
+            <div class="manager-room-tab-header">
+                <div>
+                    <h3 class="manager-settings-section-title">客室情報</h3>
+                    <p class="manager-room-tab-subtitle">
+                        客室の追加・編集・確認を行います
+                    </p>
+                </div>
+
+                <a href="#" class="btn btn-primary manager-room-add-button">
+                    ＋ 客室を追加
+                </a>
+            </div>
+
+            <!-- ここは後でDBの客室一覧に差し替える -->
+            <div class="manager-room-list">
+                <div class="manager-room-item">
+                    <div class="manager-room-item-left">
+                        <div class="manager-room-number">101号室</div>
+                        <div class="manager-room-meta">空室（予約可） / 1階</div>
+                    </div>
+                    <div class="manager-room-item-right">
+                        <a href="#" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+
+                <div class="manager-room-item">
+                    <div class="manager-room-item-left">
+                        <div class="manager-room-number">202号室</div>
+                        <div class="manager-room-meta">利用中 / 2階</div>
+                    </div>
+                    <div class="manager-room-item-right">
+                        <a href="#" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+
+                <div class="manager-room-item">
+                    <div class="manager-room-item-left">
+                        <div class="manager-room-number">203号室</div>
+                        <div class="manager-room-meta">清掃中 / 2階</div>
+                    </div>
+                    <div class="manager-room-item-right">
+                        <a href="#" class="btn btn-outline-primary btn-sm">編集</a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="manager-settings-note mt-3">
+                ※ 後でこのエリアに実際の客室一覧を表示するように接続します。
+            </p>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabs = document.querySelectorAll(".manager-settings-tab");
+        const panels = document.querySelectorAll(".manager-settings-panel");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", function () {
+                const target = this.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove("active"));
+                panels.forEach(p => p.classList.remove("active"));
+
+                this.classList.add("active");
+                document.getElementById(target).classList.add("active");
+            });
+        });
+    });
+</script>
 {% endblock %}
