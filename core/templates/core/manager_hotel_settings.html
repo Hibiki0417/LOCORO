@@ -53,7 +53,7 @@
                     </p>
                 </div>
 
-                <a href="#" class="btn btn-primary manager-room-add-button">
+                <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
                     ＋ 客室を追加
                 </a>
             </div>
@@ -68,7 +68,7 @@
                               </p>
                           </div>
 
-                          <a href="#" class="btn btn-primary manager-room-add-button">
+                          <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
                               ＋ 客室を追加
                           </a>
                       </div>
@@ -115,16 +115,29 @@
     document.addEventListener("DOMContentLoaded", function () {
         const tabs = document.querySelectorAll(".manager-settings-tab");
         const panels = document.querySelectorAll(".manager-settings-panel");
+        const params = new URLSearchParams(window.location.search);
+        const initialTab = params.get("tab");
+
+        function activateTab(target) {
+            tabs.forEach(t => t.classList.remove("active"));
+            panels.forEach(p => p.classList.remove("active"));
+
+            const targetTab = document.querySelector(`.manager-settings-tab[data-tab="${target}"]`);
+            const targetPanel = document.getElementById(target);
+
+            if (targetTab && targetPanel) {
+                targetTab.classList.add("active");
+                targetPanel.classList.add("active");
+            }
+        }
+
+        if (initialTab) {
+            activateTab(initialTab);
+        }
 
         tabs.forEach(tab => {
             tab.addEventListener("click", function () {
-                const target = this.dataset.tab;
-
-                tabs.forEach(t => t.classList.remove("active"));
-                panels.forEach(p => p.classList.remove("active"));
-
-                this.classList.add("active");
-                document.getElementById(target).classList.add("active");
+                activateTab(this.dataset.tab);
             });
         });
     });

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RoomListView, RoomDetailView, start_hold, RoomStatusView,  ManagerRoomDashboardView, ManagerHotelSettingsView, HotelListView
+from .views import RoomListView, RoomDetailView, start_hold, RoomStatusView,  ManagerRoomDashboardView, ManagerHotelSettingsView, HotelListView,  ManagerRoomCreateView
 from . import views
 from django.contrib.auth import views as auth_views
 
@@ -19,7 +19,7 @@ urlpatterns = [
     path("manager/rooms/<int:pk>/",views.RoomStatusView.as_view(),name="manager_room_detail",),
     path("manager/api/rooms/<int:pk>/status/",views.ManagerRoomStatusApiView.as_view(),name="manager_room_status_api",),
     path("hotels/<int:hotel_id>/rooms/",views.RoomListView.as_view(),name="hotel_room_list",),
-
+    path("manager/rooms/create/", views.ManagerRoomCreateView.as_view(), name="manager_room_create"),
     
 
 ]
