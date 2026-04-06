@@ -74,7 +74,11 @@
                     <a href="{% url 'core:manager_room_detail' room.pk %}" class="btn btn-outline-primary btn-sm">
                         編集
                     </a>
+                    <a href="{% url 'core:manager_room_delete' room.pk %}" class="btn btn-outline-danger btn-sm">
+                        削除
+                    </a>    
                 </div>
+                
             </div>
             {% empty %}
             <div class="manager-room-empty">

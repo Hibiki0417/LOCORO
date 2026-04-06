@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from datetime import timedelta
@@ -481,6 +481,33 @@ class ManagerRoomCreateView(LoginRequiredMixin, CreateView):
         form.instance.hotel = staff.hotel
         messages.success(self.request, "客室を追加しました。")
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["hotel"] = self.request.user.staff_profile.hotel
+        return context
+    
+class ManagerRoomDeleteView(LoginRequiredMixin, DeleteView):
+    model = Room
+    template_name = "core/manager_room_confirm_delete.html"
+    context_object_name = "room"
+
+    def dispatch(self, request, *args, **kwargs):
+        staff = getattr(request.user, "staff_profile", None)
+        if not staff:
+            return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        staff = self.request.user.staff_profile
+        return Room.objects.filter(hotel=staff.hotel)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "客室を削除しました。")
+        return super().delete(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"

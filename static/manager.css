@@ -471,3 +471,84 @@
         align-items: stretch;
     }
 }
+
+/* =========================
+   客室削除ページ
+========================= */
+
+.manager-room-delete-page {
+    padding: 32px 24px;
+}
+
+.manager-room-delete-header {
+    margin-bottom: 20px;
+}
+
+.manager-room-delete-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1c2541;
+    margin-bottom: 8px;
+}
+
+.manager-room-delete-subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.manager-room-delete-card {
+    background: #ffffff;
+    border: 1px solid #e6eaf0;
+    border-radius: 18px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+    max-width: 720px;
+}
+
+.manager-room-delete-warning {
+    margin-bottom: 24px;
+}
+
+.manager-room-delete-room-number {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1c2541;
+    margin-bottom: 8px;
+}
+
+.manager-room-delete-room-meta {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 16px;
+}
+
+.manager-room-delete-message {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #495057;
+    margin-bottom: 0;
+}
+
+.manager-room-delete-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.manager-room-item-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .manager-room-delete-page {
+        padding: 24px 16px;
+    }
+
+    .manager-room-delete-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
