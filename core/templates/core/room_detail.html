@@ -5,7 +5,7 @@
 <div class="container py-4">
   <!-- 戻るリンク -->
   <div class="mb-3">
-    <a href="{% url 'core:room_list' %}" class="btn btn-outline-secondary btn-sm">
+    <a href="{% url 'core:hotel_room_list' room.hotel.id %}" class="btn btn-outline-secondary btn-sm">
       ← 部屋一覧に戻る
     </a>
   </div>
