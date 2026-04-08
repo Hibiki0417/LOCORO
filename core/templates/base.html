@@ -23,6 +23,14 @@
             <a class="navbar-brand" href="{% url 'core:hotel_list' %}">
             <img src="{% static 'images/locoro-logo.png' %}" alt="LOCORO" class="locoro-navbar-logo">
             </a>
+            
+            {% if user.is_authenticated and not user.staff_profile %}
+             <form method="post" action="{% url 'core:customer_logout' %}">
+              {% csrf_token %}
+             <button type="submit" class="btn btn-outline-light">ログアウト</button>
+             </form>
+            {% endif %}
+
         </div>
     </nav>
 
