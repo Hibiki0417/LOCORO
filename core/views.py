@@ -13,7 +13,8 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
 
 class RoomListView(ListView):
     model = Room
@@ -516,3 +517,16 @@ class ManagerRoomDeleteView(LoginRequiredMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context["hotel"] = self.request.user.staff_profile.hotel
         return context
+
+class CustomerLoginView(LoginView):
+    template_name = "core/customer_login.html"
+
+    def form_valid(self, form):
+        user = form.get_user()
+
+        if hasattr(user, "staff_profile"):
+            messages.error(self.request, "スタッフは管理画面からログインしてください。")
+            return redirect("core:manager_login")
+
+        login(self.request, user)
+        return redirect("core:hotel_list")
