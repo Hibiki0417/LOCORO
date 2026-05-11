@@ -1,0 +1,37 @@
+{% extends "core/base_manager.html" %}
+
+{% block content %}
+<div class="manager-room-delete-page">
+    <div class="manager-room-delete-header">
+        <h2 class="manager-room-delete-title">客室を削除</h2>
+        <p class="manager-room-delete-subtitle">
+            {{ hotel.name }} の客室を削除します
+        </p>
+    </div>
+
+    <div class="manager-room-delete-card">
+        <div class="manager-room-delete-warning">
+            <h3 class="manager-room-delete-room-number">{{ room.room_number }}号室</h3>
+            <p class="manager-room-delete-room-meta">
+                {{ room.get_status_display }} / {{ room.floor }}階
+            </p>
+            <p class="manager-room-delete-message">
+                この客室を削除すると元に戻せません。  
+                本当に削除しますか？
+            </p>
+        </div>
+
+        <form method="post" class="manager-room-delete-form">
+            {% csrf_token %}
+            <div class="manager-room-delete-actions">
+                <button type="submit" class="btn btn-danger">
+                    削除する
+                </button>
+                <a href="{% url 'core:manager_hotel_settings' %}?tab=room-info" class="btn btn-outline-secondary">
+                    戻る
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

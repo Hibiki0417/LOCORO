@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from datetime import timedelta
@@ -13,7 +13,8 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
 
 class RoomListView(ListView):
     model = Room
@@ -392,11 +393,9 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
     fields = ["name", "address", "phone_number", "image", "is_active"]
 
     def get_object(self, queryset=None):
-        # staff_profile 方式に統一してる前提
         staff = getattr(self.request.user, "staff_profile", None)
         if not staff:
-            return None  # dispatchで弾く
-
+            return None
         return staff.hotel
 
     def dispatch(self, request, *args, **kwargs):
@@ -405,9 +404,29 @@ class ManagerHotelSettingsView(LoginRequiredMixin, UpdateView):
             return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        staff = getattr(self.request.user, "staff_profile", None)
+        hotel = getattr(staff, "hotel", None)
+
+        if hotel:
+            context["rooms"] = (
+                Room.objects
+                .filter(hotel=hotel)
+                .order_by("floor", "room_number")
+            )
+        else:
+            context["rooms"] = Room.objects.none()
+
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "店舗情報を更新しました。")
+        return super().form_valid(form)
+
     def get_success_url(self):
-        # 成功後はダッシュボードへ戻す
-        return reverse_lazy("core:manager_dashboard")
+        return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"
     
 
 class HotelListView(ListView):
@@ -438,3 +457,76 @@ class ManagerLoginView(LoginView):
             return self.form_invalid(form)
 
         return super().form_valid(form)
+    
+class ManagerRoomCreateView(LoginRequiredMixin, CreateView):
+    model = Room
+    template_name = "core/manager_room_create.html"
+    fields = [
+        "room_number",
+        "floor",
+        "capacity",
+        "is_smoking",
+        "is_available",
+        "base_price",
+        "status",
+    ]
+
+    def dispatch(self, request, *args, **kwargs):
+        staff = getattr(request.user, "staff_profile", None)
+        if not staff:
+            return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        staff = self.request.user.staff_profile
+        form.instance.hotel = staff.hotel
+        messages.success(self.request, "客室を追加しました。")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["hotel"] = self.request.user.staff_profile.hotel
+        return context
+    
+class ManagerRoomDeleteView(LoginRequiredMixin, DeleteView):
+    model = Room
+    template_name = "core/manager_room_confirm_delete.html"
+    context_object_name = "room"
+
+    def dispatch(self, request, *args, **kwargs):
+        staff = getattr(request.user, "staff_profile", None)
+        if not staff:
+            return HttpResponseForbidden("ホテルスタッフのみ操作できます。")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        staff = self.request.user.staff_profile
+        return Room.objects.filter(hotel=staff.hotel)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "客室を削除しました。")
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy("core:manager_hotel_settings") + "?tab=room-info"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["hotel"] = self.request.user.staff_profile.hotel
+        return context
+
+class CustomerLoginView(LoginView):
+    template_name = "core/customer_login.html"
+
+    def form_valid(self, form):
+        user = form.get_user()
+
+        if hasattr(user, "staff_profile"):
+            messages.error(self.request, "スタッフは管理画面からログインしてください。")
+            return redirect("core:manager_login")
+
+        login(self.request, user)
+        return redirect("core:hotel_list")

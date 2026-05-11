@@ -1,0 +1,26 @@
+{% extends "core/base_manager.html" %}
+
+{% block content %}
+<div class="manager-room-create-page">
+    <div class="manager-room-create-header">
+        <h2 class="manager-room-create-title">客室を追加</h2>
+        <p class="manager-room-create-subtitle">
+            {{ hotel.name }} に新しい客室を登録します
+        </p>
+    </div>
+
+    <div class="manager-room-create-card">
+        <form method="post" class="manager-room-create-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <div class="manager-room-create-actions">
+                <button type="submit" class="btn btn-primary">保存する</button>
+                <a href="{% url 'core:manager_hotel_settings' %}?tab=room-info" class="btn btn-outline-secondary">
+                    戻る
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

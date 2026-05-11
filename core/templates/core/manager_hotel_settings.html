@@ -1,25 +1,128 @@
-{# app/core/templates/core/manager_hotel_settings.html #}
 {% extends "core/base_manager.html" %}
 {% load static %}
 
 {% block content %}
-<div class="mt-4">
-  <h2 class="mb-3">店舗情報の編集（お客様側に表示される内容）</h2>
+<div class="manager-settings-page">
 
-  <div class="card p-3">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ form.as_p }}
+    <div class="manager-settings-header">
+        <h2 class="manager-settings-title">店舗設定</h2>
+        <p class="manager-settings-subtitle">
+            店舗情報の編集と客室情報の管理を行えます
+        </p>
+    </div>
 
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">保存</button>
-        <a href="{% url 'core:manager_dashboard' %}" class="btn btn-outline-secondary">戻る</a>
-      </div>
-    </form>
-  </div>
+    <!-- タブ -->
+    <div class="manager-settings-tabs">
+        <button type="button" class="manager-settings-tab active" data-tab="hotel-info">
+            店舗情報
+        </button>
+        <button type="button" class="manager-settings-tab" data-tab="room-info">
+            客室情報
+        </button>
+    </div>
 
-  <p class="text-muted mt-3" style="font-size: 0.9rem;">
-    ※ 画像や店舗名などはお客様側ページにも表示されます。
-  </p>
+    <!-- 店舗情報タブ -->
+    <div class="manager-settings-panel active" id="hotel-info">
+        <div class="manager-settings-card">
+            <h3 class="manager-settings-section-title">店舗情報の編集</h3>
+
+            <form method="post" enctype="multipart/form-data" class="manager-settings-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <div class="manager-settings-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{% url 'core:manager_dashboard' %}" class="btn btn-outline-secondary">戻る</a>
+                </div>
+            </form>
+        </div>
+
+        <p class="manager-settings-note">
+            ※ 画像や店舗名などはお客様側ページにも表示されます。
+        </p>
+    </div>
+
+    <!-- 客室情報タブ -->
+    <div class="manager-settings-panel" id="room-info">
+    <div class="manager-settings-card">
+        <div class="manager-room-tab-header">
+            <div>
+                <h3 class="manager-settings-section-title">客室情報</h3>
+                <p class="manager-room-tab-subtitle">
+                    客室の追加・編集・確認を行います
+                </p>
+            </div>
+
+            <a href="{% url 'core:manager_room_create' %}" class="btn btn-primary manager-room-add-button">
+                ＋ 客室を追加
+            </a>
+        </div>
+
+        <div class="manager-room-list">
+            {% for room in rooms %}
+            <div class="manager-room-item">
+                <div class="manager-room-item-left">
+                    <div class="manager-room-number">
+                        {{ room.room_number }}号室
+                    </div>
+                    <div class="manager-room-meta">
+                        {{ room.get_status_display }} / {{ room.floor }}階
+                    </div>
+                </div>
+
+                <div class="manager-room-item-right">
+                    <a href="{% url 'core:manager_room_detail' room.pk %}" class="btn btn-outline-primary btn-sm">
+                        編集
+                    </a>
+                    <a href="{% url 'core:manager_room_delete' room.pk %}" class="btn btn-outline-danger btn-sm">
+                        削除
+                    </a>    
+                </div>
+                
+            </div>
+            {% empty %}
+            <div class="manager-room-empty">
+                まだ客室が登録されていません。
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="manager-settings-note mt-3">
+            ※ 「編集」から各客室の状態や詳細を確認できます。
+        </p>
+    </div>
 </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabs = document.querySelectorAll(".manager-settings-tab");
+        const panels = document.querySelectorAll(".manager-settings-panel");
+        const params = new URLSearchParams(window.location.search);
+        const initialTab = params.get("tab");
+
+        function activateTab(target) {
+            tabs.forEach(t => t.classList.remove("active"));
+            panels.forEach(p => p.classList.remove("active"));
+
+            const targetTab = document.querySelector(`.manager-settings-tab[data-tab="${target}"]`);
+            const targetPanel = document.getElementById(target);
+
+            if (targetTab && targetPanel) {
+                targetTab.classList.add("active");
+                targetPanel.classList.add("active");
+            }
+        }
+
+        if (initialTab) {
+            activateTab(initialTab);
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", function () {
+                activateTab(this.dataset.tab);
+            });
+        });
+    });
+</script>
 {% endblock %}
