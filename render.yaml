@@ -3,7 +3,7 @@ services:
     name: locoro
     env: python
     plan: free
-    buildCommand: ./build.sh
+    buildCommand: bash build.sh
     startCommand: gunicorn locoro_app.wsgi:application
     envVars:
       - key: PYTHON_VERSION
