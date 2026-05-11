@@ -12,6 +12,28 @@ LOCORO は、ラブホテル向けのリアルタイム予約・部屋管理シ�
 
 ---
 
+# デモURL
+
+Render にデプロイしたデモ環境です。
+
+## 客側ページ
+- ホテル一覧: https://locoro.onrender.com/hotels/
+- 部屋一覧: https://locoro.onrender.com/rooms/
+- ホテル別部屋一覧（例: hotel_id=1）: https://locoro.onrender.com/hotels/1/rooms/
+- 部屋詳細（例: room_id=1）: https://locoro.onrender.com/rooms/1/detail
+
+## 店側ページ
+- 店舗スタッフログイン: https://locoro.onrender.com/manager/login/
+- 店舗管理ダッシュボード: https://locoro.onrender.com/manager/
+- ホテル設定: https://locoro.onrender.com/manager/hotel/settings/
+
+## 管理画面
+- Django Admin: https://locoro.onrender.com/admin/
+
+※ デモ環境は Render の Free プランで動作しているため、アクセスがない時間が続くと初回表示に時間がかかる場合があります。
+
+---
+
 # 主な機能
 
 ## 店舗管理機能
@@ -98,3 +120,4 @@ LOCORO は、ラブホテル向けのリアルタイム予約・部屋管理シ�
 ```bash
 git clone https://github.com/Hibiki0417/LOCORO.git
 cd LOCORO
+```
