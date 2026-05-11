@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: locoro
+    env: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn locoro_app.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: .onrender.com,localhost,127.0.0.1
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: locoro-db
+          property: connectionString
+
+databases:
+  - name: locoro-db
+    plan: free
