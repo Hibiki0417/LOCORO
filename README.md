@@ -71,11 +71,12 @@ Render にデプロイしたデモ環境です。
 
 ## Database
 - PostgreSQL
-- SQLite（開発初期）
+- SQLite（ローカル開発用フォールバック）
 
 ## Infrastructure
 - Docker
 - Render
+- Render PostgreSQL
 
 ## Version Control
 - Git
@@ -90,6 +91,47 @@ Render にデプロイしたデモ環境です。
 - 部屋ステータス管理ロジック
 - 店舗側で直感的に操作できるUI設計
 - fetch API を用いた非同期状態更新
+- Render 本番環境では PostgreSQL、ローカル環境では SQLite を使えるように `DATABASE_URL` でDB接続を切り替え
+- Render の Start Command で `python manage.py migrate` を自動実行し、デプロイ時にDBマイグレーションを反映
+
+---
+
+# 本番環境・DB構成
+
+LOCORO は Render にデプロイしており、本番環境では Render PostgreSQL を使用しています。
+
+## DB切り替え方針
+
+環境変数 `DATABASE_URL` の有無によって、使用するデータベースを切り替えています。
+
+- `DATABASE_URL` が設定されている環境: PostgreSQL を使用
+- `DATABASE_URL` が設定されていない環境: SQLite を使用
+
+これにより、ローカル開発では SQLite のまま簡単に動作確認でき、本番環境では PostgreSQL に接続できます。
+
+## Render の環境変数
+
+Render の Web Service 側に以下の環境変数を設定しています。
+
+```env
+DATABASE_URL=Render PostgreSQL の Internal Database URL
+```
+
+実際の値には DB パスワードが含まれるため、GitHub には公開していません。
+
+## 自動マイグレーション
+
+Render の Shell が使えない環境でもマイグレーションを反映できるように、Start Command で `migrate` を実行しています。
+
+```bash
+python manage.py migrate && gunicorn locoro_app.wsgi:application
+```
+
+この設定により、デプロイ時に以下の流れで起動します。
+
+1. PostgreSQL に対して `python manage.py migrate` を実行
+2. マイグレーション成功後、Gunicorn でDjangoアプリを起動
+3. マイグレーションに失敗した場合はアプリ起動前にエラーとして検知
 
 ---
 
