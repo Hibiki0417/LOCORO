@@ -19,21 +19,32 @@
 
     <!-- Navbar（必要なら後で変更できる）-->
     <nav class="navbar locoro-navbar mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'core:hotel_list' %}">
-            <img src="{% static 'images/locoro-logo.png' %}" alt="LOCORO" class="locoro-navbar-logo">
-            </a>
-            
-            {% if user.is_authenticated and not user.staff_profile %}
-             <form method="post" action="{% url 'core:customer_logout' %}">
-              {% csrf_token %}
-             <button type="submit" class="btn btn-outline-light">ログアウト</button>
-             </form>
-            {% endif %}
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'core:hotel_list' %}">
+        <img src="{% static 'images/locoro-logo.png' %}" alt="LOCORO" class="locoro-navbar-logo">
+        </a>
 
+        <div class="locoro-nav-links">
+        <a class="locoro-nav-link" href="{% url 'core:hotel_list' %}">ホテル一覧</a>
+
+        {% if user.is_authenticated %}
+            {# TODO: マイページ実装後にURLへ差し替える #}
+            <a class="locoro-nav-link" href="#">マイページ</a>
+
+            <form method="post" action="{% url 'core:customer_logout' %}" class="locoro-nav-form">
+            {% csrf_token %}
+            <button type="submit" class="locoro-nav-link locoro-nav-button locoro-nav-logout">
+                ログアウト
+            </button>
+            </form>
+        {% else %}
+            {# TODO: 新規登録機能実装後にURLへ差し替える #}
+            <a class="locoro-nav-link" href="#">新規登録</a>
+            <a class="locoro-nav-link" href="{% url 'core:customer_login' %}">ログイン</a>
+        {% endif %}
         </div>
-    </nav>
-
+    </div>
+    </nav>     
 
     <div class="container">
         {% block content %}

@@ -8,8 +8,9 @@
   <h1 class="mb-3">部屋ステータス管理</h1>
 
   <p class="mb-3">
-    <a href="/manager/" class="btn btn-outline-secondary btn-sm">
-      ← 公開サイトの部屋一覧へ
+    
+    <a href="{% url 'core:hotel_room_list' room.hotel.id %}" class="btn btn-outline-secondary btn-sm">
+      ← 店側ダッシュボードへ戻る
     </a>
   </p>
 
