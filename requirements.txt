@@ -2,6 +2,8 @@ Django==5.2.8
 python-dotenv
 Pillow
 gunicorn
-whitenoise
+whitenoise[brotli]
 dj-database-url
 psycopg2-binary
+cloudinary
+django-cloudinary-storage
