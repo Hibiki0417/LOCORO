@@ -13,7 +13,6 @@ Render にデプロイしたデモ環境です。
 
 ### 客側ページ
 - ホテル一覧: https://locoro.onrender.com/hotels/
-- 部屋一覧: https://locoro.onrender.com/rooms/
 - ホテル別部屋一覧（例: hotel_id=1）: https://locoro.onrender.com/hotels/1/rooms/
 - 部屋詳細（例: room_id=1）: https://locoro.onrender.com/rooms/1/detail/
 
