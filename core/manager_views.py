@@ -1,22 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, DeleteView
-from django.views.decorators.http import require_POST
-from django.utils import timezone
-from datetime import timedelta
-import datetime
-from django.contrib import messages
 from django.views import View
+from django.views.generic import ListView, CreateView, DeleteView
 from django.views.generic.edit import UpdateView
-from .models import Room, Reservation, ReservationStatus, RoomStatus, HotelStaff, Hotel
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.contrib.auth.views import LoginView
+from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth import login
 
-from .reservation_views import complete_cleaning, start_hold, cleanup_expired_holds
+from .models import Room, RoomStatus, HotelStaff, Hotel
 
 
 

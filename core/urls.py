@@ -10,7 +10,7 @@ from .customer_views import (
 
 from .reservation_views import start_hold
 
-from .views2 import (
+from .manager_views import (
     RoomStatusView,
     ManagerRoomDashboardView,
     ManagerHotelSettingsView,
