@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import RoomListView, RoomDetailView, start_hold, RoomStatusView,  ManagerRoomDashboardView, ManagerHotelSettingsView, HotelListView,  ManagerRoomCreateView, ManagerRoomDeleteView
-from . import views
+from .views2 import RoomListView, RoomDetailView, start_hold, RoomStatusView,  ManagerRoomDashboardView, ManagerHotelSettingsView, HotelListView,  ManagerRoomCreateView, ManagerRoomDeleteView
+from . import views2 as views
 from django.contrib.auth import views as auth_views
 
 app_name = "core" 
