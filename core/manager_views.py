@@ -9,7 +9,7 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseForbidden
 
 from .models import Room, RoomStatus, HotelStaff, Hotel
-
+from .reservation_views import activate_hold_after_cleaning
 
 
 
@@ -49,8 +49,7 @@ class RoomStatusView(View):
         # 清掃完了 → 空室（予約可）へ
         elif action == "clean_done":
             if room.status == RoomStatus.CLEANING:
-                room.status = RoomStatus.AVAILABLE
-                room.save()
+                activate_hold_after_cleaning(room)
 
         # 将来、キープ開始などをここに追加してもいい
         # elif action == "start_hold":
@@ -157,10 +156,30 @@ class ManagerRoomStatusApiView(LoginRequiredMixin, View):
         elif action == "clean_done":
             if room.status != RoomStatus.CLEANING:
                 return JsonResponse(
-                    {"success": False, "message": "「清掃中」の部屋だけ空室にできます。"},
+                    {"success": False, "message": "「清掃中」の部屋だけ清掃完了できます。"},
                     status=400,
                 )
-            room.status = RoomStatus.AVAILABLE
+
+            reservation = activate_hold_after_cleaning(room)
+
+            if reservation:
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "new_status": room.status,
+                        "new_status_label": room.get_status_display(),
+                        "message": "様子見予約があったため、30分HOLDに変更しました。",
+                    }
+                )
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "new_status": room.status,
+                    "new_status_label": room.get_status_display(),
+                    "message": "清掃完了し、空室に変更しました。",
+                }
+            )
 
         else:
             return JsonResponse(
