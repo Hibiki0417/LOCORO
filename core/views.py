@@ -2,18 +2,15 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, DeleteView
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-from datetime import timedelta
 import datetime
 from django.contrib import messages
 from django.views import View
 from django.views.generic.edit import UpdateView
 from .models import Room, Reservation, ReservationStatus, RoomStatus, HotelStaff, Hotel
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView
 from django.contrib.auth import login
 
 class RoomListView(ListView):
@@ -153,7 +150,7 @@ def start_hold(request, pk):
     keep_minutes = 30
     expires_at = now + timezone.timedelta(minutes=keep_minutes)
 
-    reservation = Reservation.objects.create(
+    Reservation.objects.create(
         hotel=room.hotel,
         room=room,
         status=ReservationStatus.HOLDING,
