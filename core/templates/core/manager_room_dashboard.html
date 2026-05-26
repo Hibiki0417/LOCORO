@@ -11,6 +11,12 @@
   <!-- JS通知エリア -->
   <div id="js-alert" class="alert d-none" role="alert"></div>
 
+  {% if has_expired_holds %}
+  <div class="alert alert-danger border border-danger border-3 fw-bold fs-5" role="alert">
+    【要確認】キープ時間が終了した部屋があります。<br>
+    対象部屋の入室状況を確認し、「入室済みにする」または「空室に戻す」を実行してください。
+  </div>
+  {% endif %}
 
       <!-- 選択中の部屋パネル -->
     <div class="card mb-3">

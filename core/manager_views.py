@@ -10,7 +10,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 
 from .models import Room, RoomStatus, HotelStaff, Hotel, Reservation, ReservationStatus
 from .reservation_views import activate_hold_after_cleaning
-
+from django.utils import timezone
 
 
 class RoomStatusView(View):
@@ -116,6 +116,16 @@ class ManagerRoomDashboardView(LoginRequiredMixin, ListView):
             (RoomStatus.CLEANING, "清掃中"),
             (RoomStatus.UNAVAILABLE, "予約停止中"),
         ]
+
+        expired_hold_room_ids = set(
+            Reservation.objects.filter(
+                status=ReservationStatus.HOLDING,
+                hold_expires_at__lte=timezone.now(),
+            ).values_list("room_id", flat=True)
+        )
+
+        context["expired_hold_room_ids"] = expired_hold_room_ids
+        context["has_expired_holds"] = bool(expired_hold_room_ids)
 
         return context
 
