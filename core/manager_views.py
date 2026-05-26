@@ -8,7 +8,7 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseForbidden
 
-from .models import Room, RoomStatus, HotelStaff, Hotel
+from .models import Room, RoomStatus, HotelStaff, Hotel, Reservation, ReservationStatus
 from .reservation_views import activate_hold_after_cleaning
 
 
@@ -180,6 +180,28 @@ class ManagerRoomStatusApiView(LoginRequiredMixin, View):
                     "message": "清掃完了し、空室に変更しました。",
                 }
             )
+        elif action == "checkin":
+                if room.status != RoomStatus.HOLDING:
+                    return JsonResponse(
+                        {"success": False, "message": "「予約中」の部屋だけ入室済みにできます。"},
+                        status=400,
+                    )
+
+                reservation = (
+                    Reservation.objects
+                    .filter(
+                        room=room,
+                        status=ReservationStatus.HOLDING,
+                    )
+                    .order_by("-hold_started_at")
+                    .first()
+                )
+
+                if reservation:
+                    reservation.status = ReservationStatus.CHECKED_IN
+                    reservation.save(update_fields=["status"])
+
+                room.status = RoomStatus.OCCUPIED
 
         else:
             return JsonResponse(
