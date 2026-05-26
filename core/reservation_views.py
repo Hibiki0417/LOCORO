@@ -45,54 +45,99 @@ def complete_cleaning(request, pk):
 @require_POST
 def start_hold(request, pk):
     """
-    清掃完了 → この部屋を30分キープ開始するビュー
+    客側：様子見予約を開始するビュー
 
-    - Reservation（予約）を1件作成
-        - status（予約状態）  → HOLDING（キープ中）
-        - hold_started_at（キー予約開始刻）→ 今
-        - hold_expires_at（キー終了刻）    → 30分後
-    - Room.status（部屋の状態）を holding（キープ中）に更新
+    - Reservation を RESERVED で作成
+    - keep_expires_at に 1時間後を入れる
+    - 清掃完了時に HOLDING へ変更する
     """
-
-    # 対象の部屋を取得
     room = get_object_or_404(Room, pk=pk)
-
-    # 現在時刻
     now = timezone.now()
 
-    # すでに「有効なキープ中」の予約があるか確認（ダブり防止）
-    existing = (
-        Reservation.objects
-        .filter(
-            room=room,
-            status=ReservationStatus.HOLDING,   # キープ中
-            hold_expires_at__gt=now,            # まだ期限前のものだけ
-        )
-        .first()
-    )
+    # すでに有効な様子見予約がある場合は作成しない
+    existing_reserved = Reservation.objects.filter(
+        room=room,
+        status=ReservationStatus.RESERVED,
+        keep_expires_at__gt=now,
+    ).first()
 
-    if existing:
-        # すでにキープ中なら何もせず詳細ページへ戻る
+    if existing_reserved:
         return redirect("core:room_detail", pk=room.pk)
 
-    # ここから新しい Reservation を作成
-    keep_minutes = 30
-    expires_at = now + timezone.timedelta(minutes=keep_minutes)
-
-    reservation = Reservation.objects.create(
-        hotel=room.hotel,
+    # すでに有効なHOLDがある場合も作成しない
+    existing_holding = Reservation.objects.filter(
         room=room,
         status=ReservationStatus.HOLDING,
-        hold_started_at=now,
-        hold_expires_at=expires_at,
-    )
+        hold_expires_at__gt=now,
+    ).first()
 
-    # Room（部屋）の状態も holding（キープ中）に変更
-    room.status = ReservationStatus.HOLDING
-    room.save(update_fields=["status", "updated_at"])
+    if existing_holding:
+        return redirect("core:room_detail", pk=room.pk)
+
+    # 1時間の様子見予約を作成
+# 空室の場合は、今すぐ30分HOLDする
+    if room.status == RoomStatus.AVAILABLE:
+        Reservation.objects.create(
+            hotel=room.hotel,
+            room=room,
+            status=ReservationStatus.HOLDING,
+            hold_started_at=now,
+            hold_expires_at=now + timezone.timedelta(minutes=30),
+        )
+
+        room.status = RoomStatus.HOLDING
+        room.save(update_fields=["status", "updated_at"])
+
+        return redirect("core:room_detail", pk=room.pk)
+
+    # 利用中・清掃中の場合は、1時間の様子見予約を作成する
+    if room.status in [RoomStatus.OCCUPIED, RoomStatus.CLEANING]:
+        Reservation.objects.create(
+            hotel=room.hotel,
+            room=room,
+            status=ReservationStatus.RESERVED,
+            keep_expires_at=now + timezone.timedelta(hours=1),
+        )
 
     return redirect("core:room_detail", pk=room.pk)
 
+def activate_hold_after_cleaning(room):
+    """
+    店側が清掃完了した時に呼ぶ処理。
+
+    有効な様子見予約があれば、30分HOLDへ変更する。
+    なければ部屋を空室に戻す。
+    """
+    now = timezone.now()
+
+    reservation = (
+        Reservation.objects
+        .filter(
+            room=room,
+            status=ReservationStatus.RESERVED,
+            keep_expires_at__gt=now,
+        )
+        .order_by("reserved_at")
+        .first()
+    )
+
+    if reservation:
+        reservation.status = ReservationStatus.HOLDING
+        reservation.hold_started_at = now
+        reservation.hold_expires_at = now + timezone.timedelta(minutes=30)
+        reservation.save(update_fields=[
+            "status",
+            "hold_started_at",
+            "hold_expires_at",
+        ])
+
+        room.status = RoomStatus.HOLDING
+        room.save(update_fields=["status", "updated_at"])
+        return reservation
+
+    room.status = RoomStatus.AVAILABLE
+    room.save(update_fields=["status", "updated_at"])
+    return None
 
 def cleanup_expired_holds():
     """期限切れの様子見(RESERVED)とキープ(HOLDING)をまとめて掃除"""

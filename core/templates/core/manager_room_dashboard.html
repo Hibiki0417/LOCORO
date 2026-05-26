@@ -11,6 +11,12 @@
   <!-- JS通知エリア -->
   <div id="js-alert" class="alert d-none" role="alert"></div>
 
+  {% if has_expired_holds %}
+  <div class="alert alert-danger border border-danger border-3 fw-bold fs-5" role="alert">
+    【要確認】キープ時間が終了した部屋があります。<br>
+    対象部屋の入室状況を確認し、「入室済みにする」または「空室に戻す」を実行してください。
+  </div>
+  {% endif %}
 
       <!-- 選択中の部屋パネル -->
     <div class="card mb-3">
@@ -25,6 +31,9 @@
           </button>
           <button id="btn-clean-done" class="btn btn-success" disabled>
             清掃完了 → 空室（予約可）にする
+          </button>
+          <button id="btn-checkin" class="btn btn-primary me-2" disabled>
+            入室済みにする
           </button>
         </div>
       </div>
@@ -119,6 +128,7 @@
   const labelEl = document.getElementById('selected-room-label');
   let btnCheckout = document.getElementById('btn-checkout');
   let btnCleanDone = document.getElementById('btn-clean-done');
+  let btnCheckin = document.getElementById('btn-checkin');
   const alertEl = document.getElementById('js-alert');
 
   // ===== 通知表示 =====
@@ -139,6 +149,7 @@
   function updateButtons() {
     btnCheckout.disabled = !(selectedRoomId && selectedRoomStatus === 'occupied');
     btnCleanDone.disabled = !(selectedRoomId && selectedRoomStatus === 'cleaning');
+    btnCheckin.disabled = !(selectedRoomId && selectedRoomStatus === 'holding');
   }
 
   // ===== カード選択 =====
@@ -234,12 +245,17 @@
   if (btnCleanDone) {
     btnCleanDone.replaceWith(btnCleanDone.cloneNode(true));
   }
+  if (btnCheckin) {
+    btnCheckin.replaceWith(btnCheckin.cloneNode(true));
+  }
 
   btnCheckout = document.getElementById('btn-checkout');
   btnCleanDone = document.getElementById('btn-clean-done');
+  btnCheckin = document.getElementById('btn-checkin');
 
   btnCheckout?.addEventListener('click', () => postAction('checkout'));
   btnCleanDone?.addEventListener('click', () => postAction('clean_done'));
+  btnCheckin?.addEventListener('click', () => postAction('checkin'));
 
   // ===== CSRF =====
   function getCookie(name) {

@@ -8,9 +8,9 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseForbidden
 
-from .models import Room, RoomStatus, HotelStaff, Hotel
-
-
+from .models import Room, RoomStatus, HotelStaff, Hotel, Reservation, ReservationStatus
+from .reservation_views import activate_hold_after_cleaning
+from django.utils import timezone
 
 
 class RoomStatusView(View):
@@ -49,8 +49,7 @@ class RoomStatusView(View):
         # 清掃完了 → 空室（予約可）へ
         elif action == "clean_done":
             if room.status == RoomStatus.CLEANING:
-                room.status = RoomStatus.AVAILABLE
-                room.save()
+                activate_hold_after_cleaning(room)
 
         # 将来、キープ開始などをここに追加してもいい
         # elif action == "start_hold":
@@ -118,6 +117,16 @@ class ManagerRoomDashboardView(LoginRequiredMixin, ListView):
             (RoomStatus.UNAVAILABLE, "予約停止中"),
         ]
 
+        expired_hold_room_ids = set(
+            Reservation.objects.filter(
+                status=ReservationStatus.HOLDING,
+                hold_expires_at__lte=timezone.now(),
+            ).values_list("room_id", flat=True)
+        )
+
+        context["expired_hold_room_ids"] = expired_hold_room_ids
+        context["has_expired_holds"] = bool(expired_hold_room_ids)
+
         return context
 
 
@@ -157,10 +166,52 @@ class ManagerRoomStatusApiView(LoginRequiredMixin, View):
         elif action == "clean_done":
             if room.status != RoomStatus.CLEANING:
                 return JsonResponse(
-                    {"success": False, "message": "「清掃中」の部屋だけ空室にできます。"},
+                    {"success": False, "message": "「清掃中」の部屋だけ清掃完了できます。"},
                     status=400,
                 )
-            room.status = RoomStatus.AVAILABLE
+
+            reservation = activate_hold_after_cleaning(room)
+
+            if reservation:
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "new_status": room.status,
+                        "new_status_label": room.get_status_display(),
+                        "message": "様子見予約があったため、30分HOLDに変更しました。",
+                    }
+                )
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "new_status": room.status,
+                    "new_status_label": room.get_status_display(),
+                    "message": "清掃完了し、空室に変更しました。",
+                }
+            )
+        elif action == "checkin":
+                if room.status != RoomStatus.HOLDING:
+                    return JsonResponse(
+                        {"success": False, "message": "「予約中」の部屋だけ入室済みにできます。"},
+                        status=400,
+                    )
+
+                reservation = (
+                    Reservation.objects
+                    .filter(
+                        room=room,
+                        status=ReservationStatus.HOLDING,
+                    )
+                    .order_by("-hold_started_at")
+                    .first()
+                )
+
+                if reservation:
+                    reservation.status = ReservationStatus.CHECKED_IN
+                    reservation.save(update_fields=["status"])
+
+                room.status = RoomStatus.OCCUPIED
 
         else:
             return JsonResponse(

@@ -96,19 +96,31 @@
 
         </div>
 
-                <!-- 清掃完了 → キープ開始ボタン -->
-          {% if room.status == "cleaning" %}
-          <div class="mb-3">
+        
+         {% if not active_reservation %}
+            {% if room.status == "available" or room.status == "occupied" or room.status == "cleaning" %}
+            <div class="mb-3">
               <form method="post" action="{% url 'core:start_hold' room.pk %}">
-                  {% csrf_token %}
-                  <button class="btn btn-warning w-100">
-                      清掃完了 → 30分キープ開始
-                  </button>
-              </form>
-          </div>
-          {% endif %}
+                {% csrf_token %}
 
-     
+                {% if room.status == "available" %}
+                  <button class="btn btn-warning w-100">
+                    この部屋を30分キープする
+                  </button>
+                {% elif room.status == "occupied" %}
+                  <button class="btn btn-warning w-100">
+                    様子見予約する
+                  </button>
+                {% elif room.status == "cleaning" %}
+                  <button class="btn btn-warning w-100">
+                    清掃完了後に30分キープする
+                  </button>
+                {% endif %}
+              </form>
+            </div>
+            {% endif %}
+          {% endif %}
+              
 
         <div class="card-body">
           <!-- 基本情報 -->
